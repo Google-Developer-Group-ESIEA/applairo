@@ -1,0 +1,16 @@
+# Variables d'environnement (NE JAMAIS COMMITTER CE FICHIER)
+.env
+
+# Environnement virtuel Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Fichiers IDE
+.vscode/
+.idea/
+
+# Fichiers système
+.DS_Store
