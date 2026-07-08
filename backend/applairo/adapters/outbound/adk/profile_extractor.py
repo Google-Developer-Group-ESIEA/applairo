@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from applairo.domain.errors import ProfileExtractionError
 from applairo.domain.models import SearchProfile
 
-from .agent_runner import retry_config, run_agent_once
+from .agent_runner import generation_config, run_agent_once
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,17 @@ _INSTRUCTION = """Tu es un expert en recrutement pour le GDG ESIEA.
 On te donne le texte brut d'un CV. Déduis-en un profil de recherche d'emploi.
 
 Règles :
-- titles : 1 à 3 intitulés de poste PERTINENTS et COURANTS sur le marché, adaptés
+- titles : 2 à 5 intitulés de poste PERTINENTS et COURANTS sur le marché, adaptés
   au CV (ex: "Développeur Python", "Data Engineer"). Utilise des intitulés que les
   recruteurs emploient réellement, pas les mots exacts du CV s'ils sont exotiques.
+  Chaque intitulé devient une requête de recherche plein texte distincte.
+- Variantes enrichies : si le contrat visé est une ALTERNANCE, un APPRENTISSAGE ou
+  un STAGE (ces mots figurent souvent tels quels dans les intitulés d'annonces), tu
+  PEUX ajouter, EN PLUS de l'intitulé simple, une variante avec ce mot-clé (ex:
+  "Développeur Python" ET "Développeur Python alternance"). Émets TOUJOURS l'intitulé
+  simple ; n'émets JAMAIS la variante enrichie seule (elle réduirait les résultats).
+  N'ajoute PAS de variante pour un CDI/CDD (le mot n'apparaît quasi jamais dans les
+  intitulés).
 - locations : 1 à 3 localisations plausibles déduites du CV (ville ou région). Si
   le CV n'en mentionne aucune, renvoie ["France"].
 - level : un seul mot parmi "junior", "intermédiaire", "senior", selon l'expérience.
@@ -46,7 +54,14 @@ class _ProfileDTO(BaseModel):
 class AdkProfileExtractor:
     """Extrait un SearchProfile depuis un CV via Gemini (implémente ProfileExtractionPort)."""
 
-    def __init__(self, model: str, app_name: str, retry_max: int, retry_delay: int) -> None:
+    def __init__(
+        self,
+        model: str,
+        app_name: str,
+        retry_max: int,
+        retry_delay: int,
+        max_output_tokens: int,
+    ) -> None:
         self._app_name = app_name
         self._agent = LlmAgent(
             name="profile_extractor",
@@ -54,7 +69,7 @@ class AdkProfileExtractor:
             description="Déduit un profil de recherche d'emploi à partir d'un CV",
             instruction=_INSTRUCTION,
             output_schema=_ProfileDTO,
-            generate_content_config=retry_config(retry_max, retry_delay),
+            generate_content_config=generation_config(retry_max, retry_delay, max_output_tokens),
         )
 
     async def extract_profile(self, cv_text: str) -> SearchProfile:

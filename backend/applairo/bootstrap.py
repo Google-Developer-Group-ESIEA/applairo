@@ -24,6 +24,7 @@ def build_workflow(settings: Settings) -> JobSearchWorkflow:
         app_name=settings.app_name,
         retry_max=settings.retry_max,
         retry_delay=settings.retry_delay,
+        max_output_tokens=settings.max_output_tokens,
     )
 
     # Recherche d'offres (implémente JobSearchPort). Le workflow l'appelle N fois
@@ -41,6 +42,7 @@ def build_workflow(settings: Settings) -> JobSearchWorkflow:
         app_name=settings.app_name,
         retry_max=settings.retry_max,
         retry_delay=settings.retry_delay,
+        max_output_tokens=settings.max_output_tokens,
     )
 
     return JobSearchWorkflow(

@@ -9,25 +9,31 @@ import JobCard from "./JobCard";
 
 interface Props {
   jobs: ScoredJob[];
-  onReset: () => void;
+  onRefine: () => void;
+  onNewCv: () => void;
 }
 
-export default function ResultsGrid({ jobs, onReset }: Props) {
+export default function ResultsGrid({ jobs, onRefine, onNewCv }: Props) {
   return (
     <section className="results">
       <div className="results-head">
         <h2 className="card-title">
-          {jobs.length} offre{jobs.length > 1 ? "s" : ""} evaluee
-          {jobs.length > 1 ? "s" : ""} par le comite
+          {jobs.length} offre{jobs.length > 1 ? "s" : ""} évaluée
+          {jobs.length > 1 ? "s" : ""} par le comité
         </h2>
-        <button className="btn-secondary" onClick={onReset}>
-          Nouveau CV
-        </button>
+        <div className="results-actions">
+          <button className="btn-secondary" onClick={onRefine}>
+            Affiner la recherche
+          </button>
+          <button className="btn-secondary" onClick={onNewCv}>
+            Nouveau CV
+          </button>
+        </div>
       </div>
 
       {jobs.length === 0 ? (
         <p className="empty">
-          Aucune offre trouvee. Revenez en arriere et elargissez les intitules ou
+          Aucune offre trouvée. Affinez la recherche pour élargir les intitulés ou
           les localisations.
         </p>
       ) : (

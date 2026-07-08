@@ -18,9 +18,19 @@ from google.genai.types import Content, Part
 logger = logging.getLogger(__name__)
 
 
-def retry_config(retry_max: int, retry_delay: int) -> types.GenerateContentConfig:
-    """Config de génération avec retries automatiques sur erreur 429 (quota Gemini)."""
+def generation_config(
+    retry_max: int, retry_delay: int, max_output_tokens: int
+) -> types.GenerateContentConfig:
+    """Config de génération d'un agent, pour UN appel (= un agent dans un run).
+
+    - retries automatiques sur erreur 429 (quota Gemini) ;
+    - `max_output_tokens` : plafond de jetons produits PAR AGENT et PAR RUN. Chaque
+      agent (extracteur de profil, membres du comité) est appelé une seule fois par
+      recherche : ce plafond borne donc son budget de jetons pour le run et protège
+      du coût d'une réponse qui s'emballe.
+    """
     return types.GenerateContentConfig(
+        max_output_tokens=max_output_tokens,
         http_options=types.HttpOptions(
             retry_options=types.HttpRetryOptions(
                 initial_delay=retry_delay,

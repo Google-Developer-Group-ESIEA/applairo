@@ -1,7 +1,11 @@
 // components/ProfileForm.tsx
-// Etape 4 : l'utilisateur ajuste le profil deduit du CV avant de lancer la
-// recherche (ajoute/retire des intitules et des localisations, change le niveau
-// et le contrat). Etat local, remonte via onSearch au clic sur "Lancer".
+// Onglet "Recherche" : l'utilisateur ajuste le profil deduit du CV (ajoute/retire
+// des intitules et des localisations, change le niveau et le contrat) puis lance
+// - ou relance - la recherche.
+//
+// Composant CONTROLE : l'etat du profil vit dans SearchFlow, pas ici. On peut
+// donc naviguer vers un autre onglet et revenir sans perdre ses modifications,
+// et relancer une recherche depuis le CV existant en ajustant les parametres.
 
 "use client";
 
@@ -13,16 +17,21 @@ const LEVELS = ["junior", "intermédiaire", "senior"];
 const CONTRACTS = ["", "CDI", "CDD", "stage", "alternance"];
 
 interface Props {
-  initial: SearchProfile;
+  profile: SearchProfile;
   busy: boolean;
-  onSearch: (profile: SearchProfile) => void;
+  hasResults: boolean;
+  onChange: (profile: SearchProfile) => void;
+  onSearch: () => void;
 }
 
-export default function ProfileForm({ initial, busy, onSearch }: Props) {
-  const [titles, setTitles] = useState<string[]>(initial.titles);
-  const [locations, setLocations] = useState<string[]>(initial.locations);
-  const [level, setLevel] = useState(initial.level || "intermédiaire");
-  const [contract, setContract] = useState(initial.contract_type);
+export default function ProfileForm({
+  profile,
+  busy,
+  hasResults,
+  onChange,
+  onSearch,
+}: Props) {
+  const { titles, locations, level, contract_type: contract } = profile;
 
   // Le modele peut deduire une valeur hors des listes fixes (ex: niveau
   // "confirme", contrat "freelance"). Un <select> controle dont la valeur n'est
@@ -35,60 +44,64 @@ export default function ProfileForm({ initial, busy, onSearch }: Props) {
 
   const canSearch = titles.length > 0 && locations.length > 0 && !busy;
 
-  function submit() {
-    onSearch({
-      titles,
-      locations,
-      level,
-      contract_type: contract,
-    });
+  function patch(fields: Partial<SearchProfile>) {
+    onChange({ ...profile, ...fields });
   }
+
+  const searchLabel = busy
+    ? "Recherche et évaluation en cours…"
+    : hasResults
+      ? "Relancer la recherche"
+      : "Lancer la recherche";
 
   return (
     <div className="card profile-form">
       <h2 className="card-title">Ajustez votre recherche</h2>
       <p className="card-subtitle">
-        Deduit de votre CV. Modifiez librement avant de lancer.
+        Déduit de votre CV. Modifiez librement, puis (re)lancez la recherche.
       </p>
 
       <TagField
-        label="Postes recherches"
-        placeholder="Ajouter un intitule..."
+        label="Postes recherchés"
+        placeholder="Ajouter un intitulé…"
         values={titles}
-        onChange={setTitles}
+        onChange={(v) => patch({ titles: v })}
       />
       <TagField
         label="Localisations"
-        placeholder="Ajouter une ville ou region..."
+        placeholder="Ajouter une ville ou région…"
         values={locations}
-        onChange={setLocations}
+        onChange={(v) => patch({ locations: v })}
       />
 
       <div className="field-row">
         <label className="field">
           <span className="field-label">Niveau</span>
-          <select value={level} onChange={(e) => setLevel(e.target.value)}>
+          <select value={level} onChange={(e) => patch({ level: e.target.value })}>
             {levelOptions.map((l) => (
               <option key={l} value={l}>
-                {l}
+                {l || "non précisé"}
               </option>
             ))}
           </select>
         </label>
         <label className="field">
           <span className="field-label">Contrat</span>
-          <select value={contract} onChange={(e) => setContract(e.target.value)}>
+          <select
+            value={contract}
+            onChange={(e) => patch({ contract_type: e.target.value })}
+          >
             {contractOptions.map((c) => (
               <option key={c} value={c}>
-                {c || "indifferent"}
+                {c || "indifférent"}
               </option>
             ))}
           </select>
         </label>
       </div>
 
-      <button className="btn-primary" disabled={!canSearch} onClick={submit}>
-        {busy ? "Recherche et evaluation en cours..." : "Lancer la recherche"}
+      <button className="btn-primary" disabled={!canSearch} onClick={onSearch}>
+        {searchLabel}
       </button>
     </div>
   );

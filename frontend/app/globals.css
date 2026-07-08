@@ -64,30 +64,39 @@ button {
   font-size: 15px;
 }
 
-/* ---- Stepper ---- */
-.stepper {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ---- Onglets (navigation CV / Recherche / Resultats) ---- */
+.tabs {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.step {
+.tab {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
   color: var(--muted);
   font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+.tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tab:not(:disabled):hover {
+  border-color: var(--accent-border);
 }
 
-.step-index {
+.tab-index {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -100,21 +109,13 @@ button {
   font-weight: 600;
 }
 
-.step-active {
+.tab-active {
   border-color: var(--accent-border);
   background: var(--accent-soft);
   color: var(--accent);
 }
-.step-active .step-index {
+.tab-active .tab-index {
   background: var(--accent);
-  color: #fff;
-}
-
-.step-done {
-  color: var(--high);
-}
-.step-done .step-index {
-  background: var(--high);
   color: #fff;
 }
 
@@ -139,6 +140,21 @@ button {
 }
 
 /* ---- Uploader ---- */
+.upload-stage {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.upload-current {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: var(--text);
+  text-align: center;
+}
+
 .uploader {
   max-width: 560px;
   margin: 0 auto;
@@ -284,6 +300,11 @@ select:focus,
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
+.results-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 .results-grid {
   display: grid;
@@ -399,6 +420,402 @@ select:focus,
 .score-low {
   background: var(--low-soft);
   color: var(--low);
+}
+
+/* ---- Frise des agents (recherche en temps reel) ---- */
+.timeline {
+  max-width: none; /* pleine largeur du composant (pipeline justifie) */
+  margin-top: 22px;
+}
+.timeline-lead {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.phase {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 22px;
+}
+.phase:last-child {
+  padding-bottom: 0;
+}
+
+/* Rail vertical a gauche : pastille numerotee + trait de liaison. */
+.phase-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.phase-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.25s;
+}
+.phase-rail::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  margin-top: 6px;
+  background: var(--border);
+}
+.phase:last-child .phase-rail::after {
+  display: none;
+}
+
+.phase-body {
+  flex: 1;
+  padding-top: 3px;
+  min-width: 0;
+}
+.phase-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.25s;
+}
+.phase-meta {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Etat actif : pastille bleue qui pulse, titre en accent. */
+.phase-active .phase-marker {
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: phase-pulse 1.4s ease-in-out infinite;
+}
+.phase-active .phase-title {
+  color: var(--text);
+}
+
+/* Etat termine : pastille pleine avec une coche dessinee en CSS. */
+.phase-done .phase-marker {
+  border-color: var(--high);
+  background: var(--high);
+  color: transparent;
+}
+.phase-done .phase-marker::after {
+  content: "";
+  width: 6px;
+  height: 11px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+.phase-done .phase-title {
+  color: var(--text);
+}
+
+@keyframes phase-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+  }
+}
+
+/* Une barre de chargement par recherche (fan-out replie en une seule etape). */
+.query-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.query-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.query-row-label {
+  flex: 0 0 38%;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.query-row-loc {
+  margin-left: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.query-row-count {
+  flex: 0 0 auto;
+  min-width: 40px;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Piste + remplissage. En cours : un curseur glisse (indetermine). Fini : plein. */
+.qbar {
+  position: relative;
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.qbar-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: qbar-slide 1.1s ease-in-out infinite;
+}
+.qbar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--high);
+}
+.qbar-done {
+  background: var(--high-soft);
+}
+
+@keyframes qbar-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}
+
+/* Entonnoir de selection : trouvees -> uniques -> retenues, justifie plein cadre. */
+.merge-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+.merge-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.merge-stat strong {
+  font-size: 19px;
+  color: var(--text);
+  line-height: 1.1;
+}
+.merge-stat-final {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+.merge-stat-final strong {
+  color: var(--accent);
+}
+.merge-arrow {
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--muted);
+  border-right: 2px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+/* Comite : une ligne par expert (le coeur du spectacle). */
+.experts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.expert-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  animation: agent-in 0.35s ease both;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.expert-row-done {
+  border-color: var(--high);
+  box-shadow: 0 0 0 1px var(--high);
+}
+.expert-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.expert-id {
+  min-width: 0;
+}
+.expert-status {
+  flex-shrink: 0;
+}
+.expert-row-done .agent-avatar {
+  background: var(--high-soft);
+  border-color: var(--high);
+  color: var(--high);
+}
+.agent-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.agent-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.agent-role {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-done {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--high);
+}
+
+/* Etat « en reflexion » : les points qui clignotent + le mot qui defile. */
+.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.thinking-word {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  animation: word-in 0.4s ease both;
+}
+@keyframes word-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Trois points qui clignotent tant que le membre reflechit. */
+.agent-thinking {
+  display: inline-flex;
+  gap: 4px;
+}
+.agent-thinking i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: agent-blink 1s ease-in-out infinite;
+}
+.agent-thinking i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.agent-thinking i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes agent-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes agent-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Indication de fin : le comite a fini, on bascule vers les resultats. */
+.finalizing {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  animation: agent-in 0.3s ease both;
+}
+.finalizing-text {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+}
+.finalizing-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.finalizing-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  animation-name: finalizing-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes finalizing-fill {
+  to {
+    width: 100%;
+  }
 }
 
 /* ---- Erreur ---- */

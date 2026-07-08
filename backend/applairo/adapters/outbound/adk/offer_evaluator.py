@@ -19,8 +19,9 @@ from pydantic import BaseModel, Field
 
 from applairo.domain.errors import EvaluationError
 from applairo.domain.models import CommitteeScore, Job, ScoredJob, SearchProfile
+from applairo.domain.ports.offer_evaluation import MemberDone
 
-from .agent_runner import retry_config, run_agent_once
+from .agent_runner import generation_config, run_agent_once
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +73,16 @@ class _EvalDTO(BaseModel):
 class AdkOfferEvaluator:
     """Comité d'évaluation d'offres via Gemini (implémente OfferEvaluationPort)."""
 
-    def __init__(self, model: str, app_name: str, retry_max: int, retry_delay: int) -> None:
+    def __init__(
+        self,
+        model: str,
+        app_name: str,
+        retry_max: int,
+        retry_delay: int,
+        max_output_tokens: int,
+    ) -> None:
         self._app_name = app_name
-        config = retry_config(retry_max, retry_delay)
+        config = generation_config(retry_max, retry_delay, max_output_tokens)
         # Un agent ADK par membre, construit une fois et réutilisé.
         self._agents = [
             (
@@ -91,7 +99,17 @@ class AdkOfferEvaluator:
             for i, (member, lens) in enumerate(_MEMBERS)
         ]
 
-    async def evaluate(self, profile: SearchProfile, jobs: list[Job]) -> list[ScoredJob]:
+    @property
+    def members(self) -> list[str]:
+        """Noms des membres, disponibles avant de lancer la délibération."""
+        return [member for member, _ in self._agents]
+
+    async def evaluate(
+        self,
+        profile: SearchProfile,
+        jobs: list[Job],
+        on_member_done: MemberDone | None = None,
+    ) -> list[ScoredJob]:
         if not jobs:
             return []
 
@@ -101,10 +119,15 @@ class AdkOfferEvaluator:
         )
 
         # Les trois membres notent en parallèle. Chaque membre renvoie un dict
-        # {index offre -> CommitteeScore} ; None si ce membre a échoué.
-        results = await asyncio.gather(
-            *(self._run_member(member, agent, prompt, len(jobs)) for member, agent in self._agents)
-        )
+        # {index offre -> CommitteeScore} ; None si ce membre a échoué. On notifie
+        # `on_member_done` dès qu'un membre termine, sans attendre les autres.
+        async def run(member: str, agent: LlmAgent) -> dict[int, CommitteeScore] | None:
+            scores = await self._run_member(member, agent, prompt, len(jobs))
+            if on_member_done is not None:
+                on_member_done(member, len(scores) if scores else 0)
+            return scores
+
+        results = await asyncio.gather(*(run(member, agent) for member, agent in self._agents))
 
         member_scores = [r for r in results if r is not None]
         if not member_scores:

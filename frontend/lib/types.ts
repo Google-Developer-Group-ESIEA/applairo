@@ -32,3 +32,14 @@ export interface ScoredJob {
 export interface SearchResponse {
   jobs: ScoredJob[];
 }
+
+// Événements du flux NDJSON de /api/search/stream. Le champ `type` discrimine
+// l'étape ; ils reflètent 1:1 ce qu'émet le backend (application/progress.py).
+export type SearchEvent =
+  | { type: "queries"; queries: { title: string; location: string }[] }
+  | { type: "query_done"; title: string; location: string; count: number }
+  | { type: "merged"; found: number; unique: number; kept: number }
+  | { type: "committee_start"; members: string[]; offers: number }
+  | { type: "member_done"; member: string; count: number }
+  | { type: "error"; detail: string }
+  | { type: "result"; jobs: ScoredJob[] };

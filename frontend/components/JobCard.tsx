@@ -13,7 +13,7 @@ function scoreClass(score: number): string {
 function formatSalary(min: number | null, max: number | null): string | null {
   const fmt = (n: number) => n.toLocaleString("fr-FR");
   if (min && max) return `${fmt(min)} - ${fmt(max)} €/an`;
-  if (min) return `A partir de ${fmt(min)} €/an`;
+  if (min) return `À partir de ${fmt(min)} €/an`;
   return null;
 }
 
@@ -32,7 +32,7 @@ export default function JobCard({ scored }: { scored: ScoredJob }) {
           <h3>{job.title}</h3>
           <p className="job-company">{job.company}</p>
           <p className="job-meta">
-            {job.location || "Lieu non precise"}
+            {job.location || "Lieu non précisé"}
             {salary ? ` - ${salary}` : ""}
           </p>
         </div>
