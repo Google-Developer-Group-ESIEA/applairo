@@ -53,10 +53,13 @@ class AdzunaJobSearch:
 
     def _request(self, criteria: SearchCriteria) -> dict:
         """Appelle Adzuna et retourne le JSON, ou lève JobSearchError."""
-        # Le tier gratuit d'Adzuna n'a pas de filtre `contract_type` dédié : on
-        # injecte poste + expérience + contrat dans le champ `what` pour une
-        # recherche sémantique (ex: « développeur python senior stage »).
-        what_query = f"{criteria.title} {criteria.experience} {criteria.contract_type}".strip()
+        # `what` est un champ de recherche PLEIN TEXTE (mots-clés) : y injecter le
+        # niveau d'expérience ou le type de contrat (« intermédiaire », « CDI »)
+        # exigerait que ces mots figurent littéralement dans l'annonce, ce qui
+        # vide les résultats. On n'y met donc que l'intitulé du poste. experience
+        # et contract_type restent collectés (panneau profil) mais ne filtrent
+        # pas la recherche Adzuna.
+        what_query = criteria.title
         url = f"{self._BASE_URL}/{self._country}/search/1"
         params = {
             "app_id": self._app_id,
