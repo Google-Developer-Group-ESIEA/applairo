@@ -39,11 +39,15 @@ rechargement) ; pour développer, préférez la commande `-f docker-compose.dev.
 ## Architecture
 
 Le backend suit une **architecture hexagonale (ports & adapters)** : le domaine
-(`backend/applairo/domain/`) reste pur, les intégrations (ADK, Adzuna, HTTP) sont des
-adaptateurs. Voir le [README](./README.md#architecture) pour le détail.
+(`backend/applairo/domain/`) reste pur, les intégrations (ADK, Adzuna, pypdf, HTTP) sont des
+adaptateurs. Le cas d'usage `JobSearchWorkflow` orchestre un **entonnoir** : extraction du
+CV, déduction du profil, recherche multi-requêtes (fan-out Adzuna), puis évaluation par un
+**comité de trois agents** (RH, Tech lead, Marché). Le pipeline est **sans état**. Voir le
+[README](./README.md#architecture) pour le détail.
 
-Règle d'or : n'importez jamais ADK, FastAPI ou `requests` dans `domain/`. Une nouvelle
-source d'offres = un nouvel adaptateur dans `adapters/outbound/`, sans toucher au domaine.
+Règle d'or : n'importez jamais ADK, FastAPI, `requests`, `pypdf` ou `docx` dans `domain/`.
+Une nouvelle source d'offres, un nouveau membre du comité ou un autre format de CV = un
+nouvel adaptateur dans `adapters/outbound/`, sans toucher au domaine.
 
 ## Workflow de contribution
 

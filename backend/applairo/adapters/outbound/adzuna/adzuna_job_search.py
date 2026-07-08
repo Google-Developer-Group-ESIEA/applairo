@@ -108,6 +108,7 @@ class AdzunaJobSearch:
             company=raw.get("company", {}).get("display_name", "Entreprise non précisée"),
             location=raw.get("location", {}).get("display_name", ""),
             url=raw.get("redirect_url", "#"),
+            description=raw.get("description", ""),
             salary_min=int(salary_min) if salary_min else None,
             salary_max=int(salary_max) if salary_max else None,
         )

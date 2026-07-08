@@ -10,25 +10,35 @@ Construit avec **Google ADK**, **Gemini 2.5 Flash** et l'**API Adzuna**.
 
 ## Comment ça marche ?
 
+Un pipeline en trois temps, où chaque échange transporte du **JSON structuré** (et non
+du texte de chat) : le frontend peut donc afficher de vrais composants.
+
 ```
-Navigateur ──► Frontend Next.js ──► Backend FastAPI ──► Agent ADK (Gemini 2.5 Flash)
- (chat +        (proxy /api,          (hexagonal)              │
-  panneau        pas de CORS)                        pose 4 questions
-  profil)                                                      │
-                                                     profil complet
-                                                              │
-                                                     JobSearchPort ──► API Adzuna
-                                                              │
-                                                       offres d'emploi
+1. CV (PDF/Word/txt) ──► extraction mécanique du texte (sans LLM)
+                              │
+2.                       ProfileExtractionPort ──► Gemini ──► profil de recherche (JSON)
+                              │                    (titres, localisations, niveau, contrat)
+                        l'utilisateur ajuste le profil (formulaire)
+                              │
+3. Recherche :          JobSearchPort x N ──► API Adzuna   (fan-out en parallèle, SANS LLM)
+                              │
+                        dédoublonnage + coupe aux N meilleures
+                              │
+                        Comité (RH / Tech lead / Marché) ──► Gemini   (3 agents en parallèle)
+                              │
+                        offres annotées et notées (JSON) ──► grille de résultats
 ```
 
-1. L'agent pose **4 questions** pour construire votre profil (poste, ville, expérience, contrat)
-2. Dès le profil complet, il appelle automatiquement l'outil `search_jobs`
-3. L'outil délègue au `JobSearchPort`, implémenté par l'adaptateur Adzuna (une requête HTTP)
-4. Les offres s'affichent dans le chat en markdown
+1. Vous **déposez votre CV** : le texte est extrait (pypdf / python-docx), puis un agent en
+   déduit un **profil de recherche** structuré.
+2. Vous **ajustez** ce profil (ajout d'intitulés, de localisations, choix du niveau/contrat).
+3. La recherche lance **plusieurs requêtes Adzuna en parallèle** (une par couple intitulé x
+   localisation), dédoublonne les offres, garde les meilleures, puis un **comité de trois
+   agents** (RH, Tech lead, Marché) note et annote chaque offre selon son point de vue.
 
-Le panneau latéral montre **en temps réel** les informations collectées - c'est l'aspect
-pédagogique de la démo.
+L'**entonnoir** maîtrise le coût : la recherche Adzuna ne consomme pas de LLM, et le comité
+note toutes les offres retenues en un seul appel par membre. Coût typique d'un cycle complet :
+**4 appels Gemini** (1 pour le profil, 3 pour le comité), quel que soit le nombre d'offres.
 
 ---
 
@@ -46,25 +56,29 @@ applairo/
 │   ├── main.py                # point d'entrée ASGI (uvicorn)
 │   ├── applairo/
 │   │   ├── domain/            # cœur métier PUR (aucune dépendance technique)
-│   │   │   ├── models.py      #   entités : Job, SearchCriteria
-│   │   │   ├── errors.py      #   erreurs métier : JobSearchError
-│   │   │   └── ports/         #   interfaces : JobSearchPort, ConversationPort
-│   │   ├── application/       # cas d'usage : ChatService
+│   │   │   ├── models.py      #   entités : Job, SearchProfile, ScoredJob, CommitteeScore
+│   │   │   ├── errors.py      #   erreurs métier : JobSearchError, CvExtractionError, ...
+│   │   │   └── ports/         #   interfaces : CvExtractor, ProfileExtraction,
+│   │   │                      #                JobSearch, OfferEvaluation
+│   │   ├── application/       # cas d'usage : JobSearchWorkflow (l'entonnoir)
 │   │   ├── adapters/
-│   │   │   ├── inbound/http/  #   entrant : FastAPI (routes, schémas DTO)
+│   │   │   ├── inbound/http/  #   entrant : FastAPI (routes /api/cv, /api/search, DTO)
 │   │   │   └── outbound/
-│   │   │       ├── adzuna/    #   sortant : AdzunaJobSearch  (implémente JobSearchPort)
-│   │   │       └── adk/       #   sortant : AdkConversation  (implémente ConversationPort)
+│   │   │       ├── cv/        #   sortant : DocumentCvExtractor (pypdf/python-docx)
+│   │   │       ├── adzuna/    #   sortant : AdzunaJobSearch      (implémente JobSearchPort)
+│   │   │       └── adk/       #   sortant : AdkProfileExtractor + AdkOfferEvaluator (comité)
 │   │   ├── config.py          # configuration typée (pydantic-settings)
 │   │   └── bootstrap.py       # composition root - câble les adaptateurs
 │   └── Dockerfile
 │
 └── frontend/                  # UI Next.js (App Router)
     ├── app/
-    │   ├── page.tsx           # page - monte le chat
+    │   ├── page.tsx           # page - monte le pipeline de recherche
     │   └── api/               # route handlers = proxy serveur vers le backend (BFF)
-    ├── components/            # Chat, ProfilePanel
-    ├── lib/                   # api (client), backend (serveur), profile, types
+    │       ├── cv/            #   proxy multipart (upload du CV)
+    │       └── search/        #   proxy JSON (recherche + comité)
+    ├── components/            # SearchFlow, Uploader, ProfileForm, ResultsGrid, JobCard
+    ├── lib/                   # api (client), backend (serveur), types
     └── Dockerfile
 ```
 
@@ -74,11 +88,13 @@ Le domaine ne connaît ni ADK, ni Adzuna, ni HTTP : il définit des **ports** (i
 les **adaptateurs** les implémentent. Bénéfices concrets ici :
 
 - **ADK et Adzuna sont interchangeables** - remplacer Adzuna par France Travail = un nouvel
-  adaptateur, zéro changement dans le domaine.
+  adaptateur, zéro changement dans le domaine. Idem pour le modèle (extraction, comité).
 - **Testable** - on peut injecter des ports factices sans réseau.
-- **Scalable** - les sessions passent par le `SessionService` d'ADK, injecté dans le
-  `bootstrap`. En V1 c'est `InMemorySessionService` (mono-instance) ; pour un scaling
-  horizontal, injecter `DatabaseSessionService` - rien d'autre à changer.
+- **Scalable** - le pipeline est **sans état** : aucune session serveur. Le frontend garde le
+  profil (issu de l'étape CV) et le renvoie à l'étape recherche. Chaque appel au backend est
+  indépendant, donc réplicable horizontalement sans stockage partagé.
+- **Coût maîtrisé** - l'entonnoir (`JobSearchWorkflow`) borne les appels LLM : fan-out Adzuna
+  sans modèle, puis comité en notation par lots (un appel par membre).
 
 ---
 
@@ -157,8 +173,12 @@ par `pydantic-settings`, voir `backend/applairo/config.py`) :
 | Variable | Défaut | Rôle |
 |---|---|---|
 | `ADZUNA_COUNTRY` | `fr` | Pays de recherche (`fr`, `gb`, `us`, `de`, ...) |
-| `RESULTS_PER_PAGE` | `15` | Nombre d'offres retournées |
+| `RESULTS_PER_PAGE` | `15` | Nombre d'offres retournées par requête Adzuna |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Modèle Gemini utilisé |
+| `MAX_SEARCH_COMBOS` | `6` | Nombre max de requêtes Adzuna en fan-out (intitulé x localisation) |
+| `EVAL_TOP_N` | `12` | Nombre max d'offres soumises au comité (borne le coût LLM) |
+| `MAX_UPLOAD_BYTES` | `5242880` | Taille max d'un CV uploadé (5 Mo) |
+| `LOG_LEVEL` | `INFO` | `DEBUG` pour tracer les URLs/paramètres complets |
 
 ---
 

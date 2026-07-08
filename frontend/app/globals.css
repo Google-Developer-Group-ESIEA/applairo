@@ -1,4 +1,4 @@
-/* globals.css - thème Applairo (clair, accent bleu GDG). */
+/* globals.css - theme Applairo (clair, accent bleu GDG). */
 
 :root {
   --bg: #f1f5f9;
@@ -9,8 +9,12 @@
   --accent: #2563eb;
   --accent-soft: #eff6ff;
   --accent-border: #bfdbfe;
-  --success: #16a34a;
-  --success-soft: #f0fdf4;
+  --high: #16a34a;
+  --high-soft: #f0fdf4;
+  --mid: #d97706;
+  --mid-soft: #fffbeb;
+  --low: #dc2626;
+  --low-soft: #fef2f2;
   --radius: 14px;
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -23,7 +27,6 @@ html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
 }
 
 body {
@@ -33,284 +36,1100 @@ body {
   line-height: 1.55;
 }
 
-/* ---- Layout deux colonnes ---- */
-.layout {
-  max-width: 1180px;
+button {
+  font-family: inherit;
+}
+
+/* ---- Layout general ---- */
+.flow {
+  position: relative;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px;
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  height: 100vh;
+  padding: 32px 24px 64px;
 }
 
-@media (max-width: 860px) {
-  .layout {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
+.flow-header {
+  text-align: center;
+  margin-bottom: 28px;
 }
 
-/* ---- Colonne chat ---- */
-.chat {
+.brand {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 6px 0 22px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ---- Onglets (navigation CV / Recherche / Resultats) ---- */
+.tabs {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+.tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tab:not(:disabled):hover {
+  border-color: var(--accent-border);
+}
+
+.tab-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tab-active {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.tab-active .tab-index {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---- Cartes generiques ---- */
+.card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
-  min-height: 0;
+  padding: 26px;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-.chat-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
+.card-title {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.card-subtitle {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
-.chat-header h1 {
+/* ---- Uploader ---- */
+.upload-stage {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.upload-current {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: var(--text);
+  text-align: center;
+}
+
+.uploader {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 2px dashed var(--accent-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.uploader-drag {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.uploader-busy {
+  cursor: progress;
+  opacity: 0.75;
+}
+.uploader-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 18px;
+  font-weight: 600;
 }
-
-.chat-header p {
-  margin: 4px 0 0;
-  font-size: 13px;
+.uploader-hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+.uploader-formats {
+  margin: 16px 0 0;
+  font-size: 12.5px;
   color: var(--muted);
 }
 
-.messages {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 20px 22px;
+/* Etapes d'analyse du CV (Telechargement / Extraction / Analyse) */
+.cv-steps {
+  list-style: none;
+  margin: 18px auto 0;
+  padding: 0;
+  max-width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.bubble {
-  max-width: 80%;
-  padding: 10px 15px;
-  border-radius: 14px;
-  font-size: 14.5px;
-}
-
-.bubble :first-child {
-  margin-top: 0;
-}
-.bubble :last-child {
-  margin-bottom: 0;
-}
-
-.bubble-assistant {
-  align-self: flex-start;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-border);
-  border-bottom-left-radius: 4px;
-}
-
-.bubble-user {
-  align-self: flex-end;
-  background: var(--accent);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-
-.bubble-user a {
-  color: #fff;
-  text-decoration: underline;
-}
-
-.bubble a {
-  color: var(--accent);
-}
-
-.bubble h3 {
-  font-size: 15px;
-  margin: 12px 0 4px;
-}
-
-/* Indicateur « en train d'écrire » */
-.bubble-typing {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-}
-.bubble-typing span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0.5;
-  animation: blink 1.2s infinite ease-in-out;
-}
-.bubble-typing span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.bubble-typing span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-@keyframes blink {
-  0%,
-  60%,
-  100% {
-    opacity: 0.3;
-    transform: translateY(0);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(-3px);
-  }
-}
-
-.error {
-  margin: 0 22px;
-  padding: 10px 14px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
-  border-radius: 10px;
-  font-size: 13.5px;
-}
-
-.composer {
-  display: flex;
   gap: 10px;
-  padding: 16px 22px;
-  border-top: 1px solid var(--border);
+  text-align: left;
+}
+.cv-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+  transition: color 0.25s;
+}
+.cv-step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  transition: all 0.25s;
+}
+.cv-step-label {
+  flex: 1;
 }
 
-.composer input {
+.cv-step-active {
+  color: var(--text);
+  font-weight: 600;
+}
+.cv-step-active .cv-step-marker {
+  border-color: var(--accent);
+  animation: phase-pulse 1.4s ease-in-out infinite;
+}
+
+.cv-step-done {
+  color: var(--text);
+}
+.cv-step-done .cv-step-marker {
+  border-color: var(--high);
+  background: var(--high);
+}
+.cv-step-done .cv-step-marker::after {
+  content: "";
+  width: 4px;
+  height: 8px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.cv-step-pending {
+  opacity: 0.6;
+}
+
+/* ---- Formulaire profil ---- */
+.field {
+  display: block;
+  margin-bottom: 18px;
+}
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.field-row {
+  display: flex;
+  gap: 16px;
+}
+.field-row .field {
   flex: 1;
-  padding: 11px 14px;
+}
+
+select,
+.tag-input input {
+  width: 100%;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 14.5px;
+  font-size: 14px;
   font-family: inherit;
   outline: none;
+  background: #fff;
 }
-.composer input:focus {
+select:focus,
+.tag-input input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.composer button {
-  padding: 0 20px;
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 13px;
+}
+.tag-remove {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+}
+.tag-input {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- Boutons ---- */
+.btn-primary {
+  width: 100%;
+  margin-top: 6px;
+  padding: 13px 20px;
   background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
 }
-.composer button:disabled {
+.btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* ---- Panneau profil ---- */
-.panel {
+.btn-secondary {
+  display: inline-block;
+  padding: 9px 16px;
+  background: var(--surface);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ---- Resultats ---- */
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.results-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 0;
+}
+
+/* ---- Carte offre ---- */
+.job-card {
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
-  overflow-y: auto;
+  padding: 18px;
 }
 
-.panel-title {
-  margin: 0 0 14px;
+.job-card-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.overall {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+}
+.overall-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+.overall-label {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.job-card-title h3 {
+  margin: 0;
   font-size: 16px;
+  line-height: 1.3;
 }
-
-.progress-track {
-  height: 8px;
-  background: var(--border);
-  border-radius: 999px;
-  overflow: hidden;
+.job-company {
+  margin: 3px 0 0;
+  font-weight: 600;
+  font-size: 14px;
 }
-.progress-bar {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-.progress-label {
-  margin: 8px 0 16px;
+.job-meta {
+  margin: 3px 0 0;
   font-size: 13px;
   color: var(--muted);
 }
 
-.steps {
+.committee {
   list-style: none;
-  margin: 0;
+  margin: 16px 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
-.step {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #f9fafb;
+.committee-item {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
 }
-.step-done {
-  border-color: var(--accent-border);
-  background: var(--accent-soft);
+.committee-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.step-label {
-  display: block;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 2px;
-}
-.step-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--accent);
-}
-.step-value em {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-.step-complete {
-  margin-top: 12px;
-  padding: 10px;
-  text-align: center;
-  border-radius: 10px;
-  background: var(--success-soft);
-  border: 1px solid #86efac;
-  color: var(--success);
+.committee-member {
+  font-size: 13px;
   font-weight: 600;
 }
+.committee-score {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.committee-notes {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
 
-.panel-note {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+.job-link {
+  margin-top: auto;
+  text-align: center;
+}
+
+/* ---- Couleurs de score (partagees note globale + membres) ---- */
+.score-high {
+  background: var(--high-soft);
+  color: var(--high);
+}
+.score-mid {
+  background: var(--mid-soft);
+  color: var(--mid);
+}
+.score-low {
+  background: var(--low-soft);
+  color: var(--low);
+}
+
+/* ---- Frise des agents (recherche en temps reel) ---- */
+.timeline {
+  max-width: none; /* pleine largeur du composant (pipeline justifie) */
+  margin-top: 22px;
+}
+.timeline-lead {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.phase {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 22px;
+}
+.phase:last-child {
+  padding-bottom: 0;
+}
+
+/* Rail vertical a gauche : pastille numerotee + trait de liaison. */
+.phase-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.phase-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.25s;
+}
+.phase-rail::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  margin-top: 6px;
+  background: var(--border);
+}
+.phase:last-child .phase-rail::after {
+  display: none;
+}
+
+.phase-body {
+  flex: 1;
+  padding-top: 3px;
+  min-width: 0;
+}
+.phase-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.25s;
+}
+.phase-meta {
+  margin: 8px 0 0;
   font-size: 13px;
   color: var(--muted);
 }
-.panel-note h3 {
-  margin: 0 0 8px;
-  font-size: 13.5px;
+
+/* Etat actif : pastille bleue qui pulse, titre en accent. */
+.phase-active .phase-marker {
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: phase-pulse 1.4s ease-in-out infinite;
+}
+.phase-active .phase-title {
   color: var(--text);
 }
-.panel-note ol {
-  margin: 0;
-  padding-left: 18px;
+
+/* Etat termine : pastille pleine avec une coche dessinee en CSS. */
+.phase-done .phase-marker {
+  border-color: var(--high);
+  background: var(--high);
+  color: transparent;
+}
+.phase-done .phase-marker::after {
+  content: "";
+  width: 6px;
+  height: 11px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+.phase-done .phase-title {
+  color: var(--text);
+}
+
+@keyframes phase-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+  }
+}
+
+/* Une barre de chargement par recherche (fan-out replie en une seule etape). */
+.query-rows {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+.query-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.query-row-label {
+  flex: 0 0 38%;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.query-row-loc {
+  margin-left: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.query-row-count {
+  flex: 0 0 auto;
+  min-width: 40px;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Piste + remplissage. En cours : un curseur glisse (indetermine). Fini : plein. */
+.qbar {
+  position: relative;
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.qbar-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: qbar-slide 1.1s ease-in-out infinite;
+}
+.qbar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--high);
+}
+.qbar-done {
+  background: var(--high-soft);
+}
+
+@keyframes qbar-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}
+
+/* Entonnoir de selection : trouvees -> uniques -> retenues, justifie plein cadre. */
+.merge-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+.merge-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.merge-stat strong {
+  font-size: 19px;
+  color: var(--text);
+  line-height: 1.1;
+}
+.merge-stat-final {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+.merge-stat-final strong {
+  color: var(--accent);
+}
+.merge-arrow {
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--muted);
+  border-right: 2px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+/* Comite : une ligne par expert (le coeur du spectacle). */
+.experts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.expert-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  animation: agent-in 0.35s ease both;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.expert-row-done {
+  border-color: var(--high);
+  box-shadow: 0 0 0 1px var(--high);
+}
+.expert-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.expert-id {
+  min-width: 0;
+}
+.expert-status {
+  flex-shrink: 0;
+}
+.expert-row-done .agent-avatar {
+  background: var(--high-soft);
+  border-color: var(--high);
+  color: var(--high);
+}
+.agent-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.agent-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.agent-role {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-done {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--high);
+}
+
+/* Etat « en reflexion » : les points qui clignotent + le mot qui defile. */
+.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.thinking-word {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  animation: word-in 0.4s ease both;
+}
+@keyframes word-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Trois points qui clignotent tant que le membre reflechit. */
+.agent-thinking {
+  display: inline-flex;
   gap: 4px;
 }
-.panel-note code {
+.agent-thinking i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: agent-blink 1s ease-in-out infinite;
+}
+.agent-thinking i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.agent-thinking i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes agent-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes agent-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Indication de fin : le comite a fini, on bascule vers les resultats. */
+.finalizing {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  animation: agent-in 0.3s ease both;
+}
+.finalizing-text {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+}
+.finalizing-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.finalizing-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  animation-name: finalizing-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes finalizing-fill {
+  to {
+    width: 100%;
+  }
+}
+
+/* ---- Page « Comment ca marche » (explicative, statique) ---- */
+.hiw {
+  max-width: 860px;
+}
+
+.hiw-back {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+/* Encart du principe cle : le cout LLM borne par construction. */
+.hiw-keystone {
+  max-width: none;
+  text-align: center;
+  border-color: var(--accent-border);
+  background: linear-gradient(180deg, var(--accent-soft), var(--surface));
+}
+.hiw-keystone-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.hiw-keystone-headline {
+  margin: 0 auto 14px;
+  max-width: 620px;
+  font-size: 23px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hiw-keystone-headline strong {
+  color: var(--accent);
+}
+.hiw-keystone-body {
+  margin: 0 auto;
+  max-width: 620px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.hiw-keystone-body strong {
+  color: var(--text);
+}
+
+.hiw-section {
+  margin-top: 48px;
+}
+.hiw-h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+.hiw-section-lead {
+  margin: 0 auto 24px;
+  max-width: 620px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+/* Rail vertical statique (emprunte a la frise, sans l'animation « en cours »). */
+.hiw-steps {
+  list-style: none;
+  margin: 24px auto 0;
+  padding: 0;
+  max-width: 680px;
+}
+.hiw-step {
+  display: flex;
+  gap: 18px;
+  padding-bottom: 26px;
+}
+.hiw-step:last-child {
+  padding-bottom: 0;
+}
+.hiw-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.hiw-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+.hiw-step-ia .hiw-marker {
+  border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
-  padding: 1px 5px;
-  border-radius: 5px;
-  font-size: 12px;
+}
+.hiw-rail::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  margin-top: 8px;
+  background: var(--border);
+}
+.hiw-step:last-child .hiw-rail::after {
+  display: none;
+}
+
+.hiw-step-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+.hiw-step-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.hiw-step-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 600;
+}
+.hiw-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.hiw-badge-ia {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+}
+.hiw-badge-mecanique {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.hiw-step-text {
+  margin: 0;
+  font-size: 14.5px;
+}
+.hiw-step-detail {
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--border);
+  background: var(--bg);
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Comite : trois cartes. */
+.hiw-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+.hiw-member {
+  max-width: none;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 20px;
+}
+.hiw-member-lens {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Partis pris : grille de cartes. */
+.hiw-principles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.hiw-principle {
+  max-width: none;
+  padding: 22px;
+}
+.hiw-principle-title {
+  margin: 0 0 8px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.hiw-principle-body {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.hiw-footer {
+  margin-top: 48px;
+  text-align: center;
+}
+.hiw-cta {
+  width: auto;
+  display: inline-block;
+  padding: 13px 32px;
+  text-decoration: none;
+}
+
+/* ---- Bouton « Comment ca marche » epingle en haut a droite de l'accueil ---- */
+.hiw-corner {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+}
+@media (max-width: 560px) {
+  .hiw-corner {
+    top: 16px;
+    right: 16px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+}
+
+/* ---- Erreur ---- */
+.error {
+  max-width: 640px;
+  margin: 0 auto 18px;
+  padding: 10px 14px;
+  background: var(--low-soft);
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 10px;
+  font-size: 13.5px;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
 }

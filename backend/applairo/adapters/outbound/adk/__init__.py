@@ -1,1 +1,1 @@
-# Adaptateur ADK : implémente ConversationPort avec Google Agent Development Kit.
+# Adaptateurs ADK : extraction de profil et comité d'évaluation via Google ADK.

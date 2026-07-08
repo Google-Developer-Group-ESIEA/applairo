@@ -1,8 +1,8 @@
 // app/page.tsx
-// Page d'accueil : monte le composant de conversation.
+// Page d'accueil : monte le pipeline de recherche structure.
 
-import Chat from "@/components/Chat";
+import SearchFlow from "@/components/SearchFlow";
 
 export default function Home() {
-  return <Chat />;
+  return <SearchFlow />;
 }
