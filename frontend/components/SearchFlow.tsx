@@ -128,15 +128,13 @@ export default function SearchFlow() {
 
   return (
     <main className="flow">
+      <a href="/comment-ca-marche" className="btn-secondary hiw-corner">
+        Comment ça marche ?
+      </a>
       <header className="flow-header">
         <h1 className="brand">Applairo</h1>
         <p className="tagline">
           Votre CV, analysé et confronté à de vraies offres par un comité d&apos;agents.
-        </p>
-        <p>
-          <a href="/comment-ca-marche" className="hiw-link">
-            Comment ça marche ?
-          </a>
         </p>
         <nav className="tabs">
           {tabs.map((t, i) => (
