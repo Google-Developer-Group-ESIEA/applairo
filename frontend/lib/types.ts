@@ -33,6 +33,21 @@ export interface SearchResponse {
   jobs: ScoredJob[];
 }
 
+// Consommation d'un appel LLM (tokens + coût), telle qu'affichée en direct.
+export interface Usage {
+  model: string;
+  prompt_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  cost_usd: number;
+}
+
+// Réponse de /api/cv : profil déduit + consommation de l'appel d'extraction.
+export interface AnalyzeCvResponse {
+  profile: SearchProfile;
+  usage: Usage | null;
+}
+
 // Événements du flux NDJSON de /api/search/stream. Le champ `type` discrimine
 // l'étape ; ils reflètent 1:1 ce qu'émet le backend (application/progress.py).
 export type SearchEvent =
@@ -40,6 +55,16 @@ export type SearchEvent =
   | { type: "query_done"; title: string; location: string; count: number }
   | { type: "merged"; found: number; unique: number; kept: number }
   | { type: "committee_start"; members: string[]; offers: number }
-  | { type: "member_done"; member: string; count: number }
+  | {
+      type: "member_done";
+      member: string;
+      count: number;
+      // Consommation de l'appel de ce membre (absente si l'API ne la fournit pas).
+      model?: string;
+      prompt_tokens?: number;
+      output_tokens?: number;
+      total_tokens?: number;
+      cost_usd?: number;
+    }
   | { type: "error"; detail: string }
   | { type: "result"; jobs: ScoredJob[] };

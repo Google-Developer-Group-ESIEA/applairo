@@ -18,7 +18,7 @@ from google.adk.agents import LlmAgent
 from pydantic import BaseModel, Field
 
 from applairo.domain.errors import EvaluationError
-from applairo.domain.models import CommitteeScore, Job, ScoredJob, SearchProfile
+from applairo.domain.models import CommitteeScore, Job, ScoredJob, SearchProfile, TokenUsage
 from applairo.domain.ports.offer_evaluation import MemberDone
 
 from .agent_runner import generation_config, run_agent_once
@@ -122,9 +122,9 @@ class AdkOfferEvaluator:
         # {index offre -> CommitteeScore} ; None si ce membre a échoué. On notifie
         # `on_member_done` dès qu'un membre termine, sans attendre les autres.
         async def run(member: str, agent: LlmAgent) -> dict[int, CommitteeScore] | None:
-            scores = await self._run_member(member, agent, prompt, len(jobs))
+            scores, usage = await self._run_member(member, agent, prompt, len(jobs))
             if on_member_done is not None:
-                on_member_done(member, len(scores) if scores else 0)
+                on_member_done(member, len(scores) if scores else 0, usage)
             return scores
 
         results = await asyncio.gather(*(run(member, agent) for member, agent in self._agents))
@@ -139,22 +139,32 @@ class AdkOfferEvaluator:
 
     async def _run_member(
         self, member: str, agent: LlmAgent, prompt: str, job_count: int
-    ) -> dict[int, CommitteeScore] | None:
-        """Fait noter le lot d'offres par un membre. Retourne None si le membre échoue."""
+    ) -> tuple[dict[int, CommitteeScore] | None, TokenUsage | None]:
+        """Fait noter le lot d'offres par un membre.
+
+        Retourne (notes, tokens). Les notes valent None si le membre échoue ; les
+        tokens sont retournés dans tous les cas où l'API les fournit (même sur une
+        réponse invalide, l'appel a bien consommé des tokens).
+        """
+        raw, usage = await run_agent_once(agent, prompt, self._app_name)
         try:
-            raw = await run_agent_once(agent, prompt, self._app_name)
             dto = _EvalDTO.model_validate_json(raw)
         except ValueError as exc:
             logger.warning("Comité (%s) : réponse invalide, membre ignoré : %s", member, exc)
-            return None
+            return None, usage
 
         scores = {
             item.index: CommitteeScore(member=member, score=item.score, notes=item.notes.strip())
             for item in dto.evaluations
             if 0 <= item.index < job_count
         }
-        logger.info("Comité (%s) : %d offre(s) notée(s)", member, len(scores))
-        return scores
+        logger.info(
+            "Comité (%s) : %d offre(s) notée(s) (tokens=%s)",
+            member,
+            len(scores),
+            usage.total if usage else "?",
+        )
+        return scores, usage
 
     @staticmethod
     def _assemble(

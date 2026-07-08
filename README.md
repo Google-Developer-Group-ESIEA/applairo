@@ -178,6 +178,8 @@ par `pydantic-settings`, voir `backend/applairo/config.py`) :
 | `MAX_SEARCH_COMBOS` | `6` | Nombre max de requêtes Adzuna en fan-out (intitulé x localisation) |
 | `EVAL_TOP_N` | `12` | Nombre max d'offres soumises au comité (borne le coût LLM) |
 | `MAX_UPLOAD_BYTES` | `5242880` | Taille max d'un CV uploadé (5 Mo) |
+| `PRICE_INPUT_USD_PER_MTOK` | `0.30` | Tarif entrée (USD/million de tokens) pour l'affichage du coût en direct |
+| `PRICE_OUTPUT_USD_PER_MTOK` | `2.50` | Tarif sortie (USD/million de tokens) ; défauts = grille `gemini-2.5-flash` |
 | `LOG_LEVEL` | `INFO` | `DEBUG` pour tracer les URLs/paramètres complets |
 
 ---

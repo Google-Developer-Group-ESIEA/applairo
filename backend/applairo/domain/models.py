@@ -52,6 +52,21 @@ class Job:
 
 
 @dataclass(frozen=True)
+class TokenUsage:
+    """Consommation de tokens d'un appel au modèle (télémétrie de coût).
+
+    Valeur pure (des entiers, aucune dépendance technique) : la maîtrise du coût
+    LLM est une préoccupation centrale de cette app (voir l'entonnoir), donc les
+    tokens font partie de son vocabulaire. `output` agrège les tokens de sortie
+    ET de « réflexion » (thinking), tous deux facturés comme de la sortie.
+    """
+
+    prompt: int
+    output: int
+    total: int
+
+
+@dataclass(frozen=True)
 class CommitteeScore:
     """Note et commentaire d'un membre du comité d'évaluation pour une offre.
 

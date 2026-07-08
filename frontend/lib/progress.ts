@@ -3,7 +3,7 @@
 // NDJSON. Isolé ici (hors composant) pour rester simple à suivre et à tester :
 // `initialProgress` + `applyEvent` forment un petit réducteur pur.
 
-import type { SearchEvent } from "./types";
+import type { SearchEvent, Usage } from "./types";
 
 export interface ProgressState {
   queries: { title: string; location: string }[];
@@ -13,6 +13,8 @@ export interface ProgressState {
   merged: { found: number; unique: number; kept: number } | null;
   members: string[];
   membersDone: Record<string, number>; // membre -> nombre d'offres notées
+  // Consommation par membre (tokens + coût), affichée dès qu'il a fini.
+  memberUsage: Record<string, Usage>;
   offers: number; // offres envoyées au comité
 }
 
@@ -23,6 +25,7 @@ export const initialProgress: ProgressState = {
   merged: null,
   members: [],
   membersDone: {},
+  memberUsage: {},
   offers: 0,
 };
 
@@ -48,11 +51,28 @@ export function applyEvent(state: ProgressState, event: SearchEvent): ProgressSt
       };
     case "committee_start":
       return { ...state, members: event.members, offers: event.offers };
-    case "member_done":
+    case "member_done": {
+      const membersDone = { ...state.membersDone, [event.member]: event.count };
+      // Les champs de consommation sont optionnels : on n'enregistre l'usage que
+      // si le backend l'a fourni pour ce membre.
+      if (event.cost_usd === undefined || event.total_tokens === undefined) {
+        return { ...state, membersDone };
+      }
       return {
         ...state,
-        membersDone: { ...state.membersDone, [event.member]: event.count },
+        membersDone,
+        memberUsage: {
+          ...state.memberUsage,
+          [event.member]: {
+            model: event.model ?? "",
+            prompt_tokens: event.prompt_tokens ?? 0,
+            output_tokens: event.output_tokens ?? 0,
+            total_tokens: event.total_tokens,
+            cost_usd: event.cost_usd,
+          },
+        },
       };
+    }
     default:
       return state;
   }

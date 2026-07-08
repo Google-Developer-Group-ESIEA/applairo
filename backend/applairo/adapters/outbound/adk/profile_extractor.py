@@ -12,7 +12,7 @@ from google.adk.agents import LlmAgent
 from pydantic import BaseModel, Field
 
 from applairo.domain.errors import ProfileExtractionError
-from applairo.domain.models import SearchProfile
+from applairo.domain.models import SearchProfile, TokenUsage
 
 from .agent_runner import generation_config, run_agent_once
 
@@ -72,8 +72,8 @@ class AdkProfileExtractor:
             generate_content_config=generation_config(retry_max, retry_delay, max_output_tokens),
         )
 
-    async def extract_profile(self, cv_text: str) -> SearchProfile:
-        raw = await run_agent_once(self._agent, cv_text, self._app_name)
+    async def extract_profile(self, cv_text: str) -> tuple[SearchProfile, TokenUsage | None]:
+        raw, usage = await run_agent_once(self._agent, cv_text, self._app_name)
         try:
             dto = _ProfileDTO.model_validate_json(raw)
         except ValueError as exc:
@@ -93,9 +93,10 @@ class AdkProfileExtractor:
             contract_type=dto.contract_type.strip(),
         )
         logger.info(
-            "Profil déduit : titles=%s locations=%s level=%r",
+            "Profil déduit : titles=%s locations=%s level=%r (tokens=%s)",
             list(profile.titles),
             list(profile.locations),
             profile.level,
+            usage.total if usage else "?",
         )
-        return profile
+        return profile, usage
