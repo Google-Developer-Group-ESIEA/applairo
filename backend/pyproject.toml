@@ -1,0 +1,30 @@
+[project]
+name = "applairo-backend"
+version = "0.1.0"
+description = "Applairo — backend hexagonal (Google ADK + Gemini + Adzuna) exposé en API REST."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Google Developer Group ESIEA" }]
+dependencies = [
+    "google-adk>=1.0.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "requests>=2.31.0",
+    "pydantic-settings>=2.0",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.6"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+# main.py charge le .env (load_dotenv) AVANT d'importer l'app, ce qui impose
+# un import après du code au niveau module.
+"main.py" = ["E402"]

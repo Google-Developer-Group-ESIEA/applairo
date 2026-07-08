@@ -10,8 +10,9 @@ En participant, vous acceptez de respecter notre
 
 ## Prérequis
 
-- **Python 3.10+**
-- **[uv](https://docs.astral.sh/uv/)**, gestionnaire de paquets et d'environnements
+- **[Docker](https://docs.docker.com/get-docker/)** + Docker Compose *(voie recommandée)*
+- Pour le dev local : **[uv](https://docs.astral.sh/uv/)** (backend Python) et
+  **[pnpm](https://pnpm.io/)** + **Node 20** (frontend)
 - Des clés API gratuites (voir le [README](./README.md)) : Google AI Studio et Adzuna
 
 ## Mise en route
@@ -21,14 +22,15 @@ En participant, vous acceptez de respecter notre
 git clone git@github.com:<votre-utilisateur>/applairo.git
 cd applairo
 
-# 2. Installez tout (uv crée le .venv et installe les dépendances + outils dev)
-uv sync
-
-# 3. Configurez vos clés API
+# 2. Configurez vos clés API
 cp .env.example .env   # puis renseignez les variables
 
-# 4. Lancez l'application
-uv run python app.py    # http://localhost:7860
+# 3a. Tout lancer avec Docker (backend + frontend)
+docker compose up --build            # front : http://localhost:3000
+
+# 3b. ...ou en local, service par service
+cd backend  && uv sync && uv run uvicorn main:app --reload   # :8000
+cd frontend && pnpm install && pnpm dev                      # :3000
 ```
 
 ## Workflow de contribution
@@ -40,9 +42,11 @@ uv run python app.py    # http://localhost:7860
 2. **Codez** votre changement. Gardez les commits petits et ciblés.
 3. **Vérifiez localement** avant de pousser (c'est ce que la CI vérifie aussi) :
    ```bash
-   uv run ruff check .                                   # lint
-   uv run python -m compileall -q agent.py app.py config.py tools
-   uv run python -c "import config, tools.adzuna"        # smoke test
+   # Backend
+   cd backend && uv run ruff check . && \
+     uv run python -c "import applairo.adapters.inbound.http.app"   # lint + smoke
+   # Frontend
+   cd frontend && pnpm build                                        # type-check + build
    ```
 4. **Poussez** et ouvrez une **Pull Request** vers `main`.
 5. La **CI** doit être verte et au moins **une revue** est requise avant le merge.
@@ -56,8 +60,9 @@ uv run python app.py    # http://localhost:7860
 - **Langue** : le projet est majoritairement en français (public GDG ESIEA).
   Commentaires et docs en français, noms de variables en anglais, comme
   l'existant.
-- **Dépendances** : ajoutez-les via `uv add <paquet>` (met à jour
-  `pyproject.toml` et `uv.lock`). Ne modifiez pas `uv.lock` à la main.
+- **Dépendances** : backend via `uv add <paquet>` (met à jour `pyproject.toml` +
+  `uv.lock`), frontend via `pnpm add <paquet>` (dans `frontend/`). Ne modifiez pas
+  les lockfiles à la main.
 
 ## Signaler un bug ou proposer une idée
 

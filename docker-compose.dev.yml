@@ -1,0 +1,63 @@
+# Compose de développement AUTONOME (hot reload). S'utilise seul :
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Lance les serveurs de dev (uvicorn --reload, next dev) avec le code source monté
+# en volume : toute modification d'un .py / .tsx est prise en compte sans
+# reconstruire l'image. Le compose de base (docker-compose.yml) reste, lui, dédié
+# à la production.
+
+services:
+  backend:
+    build: ./backend
+    # Nom d'image distinct de la prod pour éviter toute réutilisation d'une image
+    # obsolète (la prod produirait le même nom par défaut).
+    image: applairo-backend-dev
+    # uvicorn surveille /app et redémarre à chaque changement.
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      # Volume anonyme : préserve le .venv construit dans l'image (sinon le bind
+      # mount du dossier hôte le masquerait).
+      - /app/.venv
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    # Image distincte de la prod (cible « dev » vs « runner »), sinon un
+    # « docker compose up » de prod écraserait cette image et l'on relancerait
+    # le serveur de production sans pnpm.
+    image: applairo-frontend-dev
+    command: pnpm dev
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      # Volumes anonymes : node_modules et .next viennent de l'image / du
+      # conteneur, pas de l'hôte.
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      backend:
+        condition: service_healthy
+    # Sur macOS / Windows, le hot reload via bind mount peut nécessiter le polling
+    # (inotify n'y fonctionne pas toujours). Sous Linux, inutile.
+    # environment:
+    #   - WATCHPACK_POLLING=true

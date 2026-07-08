@@ -1,0 +1,40 @@
+# Orchestration Applairo : backend (API ADK) + frontend (Next.js).
+#
+# Démarrage :  docker compose up --build
+#   - Frontend : http://localhost:3000
+#   - Backend  : http://localhost:8000  (docs : /docs)
+#
+# Les secrets (clés Google / Adzuna) sont lus depuis le fichier .env à la racine.
+# Copiez .env.example en .env avant de lancer.
+
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    healthcheck:
+      # Sonde /health sans dépendance externe (pas de curl à installer).
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build: ./frontend
+    environment:
+      # Adresse du backend sur le réseau interne compose (nom du service).
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        # Ne démarre le frontend qu'une fois le backend sain.
+        condition: service_healthy
