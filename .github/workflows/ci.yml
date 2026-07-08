@@ -12,8 +12,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Détecte quelles parties du dépôt ont changé pour ne lancer que les jobs utiles.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docker: ${{ steps.filter.outputs.docker }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Filter paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci.yml'
+            docker:
+              - 'backend/**'
+              - 'frontend/**'
+              - 'docker-compose*.yml'
+              - '.github/workflows/ci.yml'
+
   backend:
     name: backend
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,6 +65,9 @@ jobs:
       - name: Lint (ruff)
         run: uv run ruff check .
 
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
+
       - name: Compile check
         run: uv run python -m compileall -q applairo main.py
 
@@ -42,6 +76,8 @@ jobs:
 
   frontend:
     name: frontend
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,5 +101,41 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint
+        run: pnpm lint
+
       - name: Build
         run: pnpm build
+
+  # Vérifie que les images Docker se construisent (prod + dev).
+  docker:
+    name: docker
+    needs: changes
+    if: ${{ needs.changes.outputs.docker == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare .env
+        # `env_file: .env` doit exister pour que Compose lise la configuration.
+        # Les valeurs factices suffisent : on construit les images, on ne lance rien.
+        run: cp .env.example .env
+
+      - name: Build production images
+        run: docker compose build
+
+      - name: Build dev images
+        run: docker compose -f docker-compose.dev.yml build
+
+  # Point de contrôle unique et stable pour la protection de branche : réussit si
+  # aucun job requis n'a échoué (un job ignoré par les filtres de chemin est OK).
+  ci-success:
+    name: ci-success
+    if: always()
+    needs: [changes, backend, frontend, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any job failed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
