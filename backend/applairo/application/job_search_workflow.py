@@ -18,8 +18,9 @@ import logging
 from collections.abc import AsyncIterator
 
 from applairo.application.progress import Progress, SearchComplete
+from applairo.application.usage import CallUsage, Pricing
 from applairo.domain.errors import EvaluationError
-from applairo.domain.models import Job, ScoredJob, SearchCriteria, SearchProfile
+from applairo.domain.models import Job, ScoredJob, SearchCriteria, SearchProfile, TokenUsage
 from applairo.domain.ports.cv_extractor import CvExtractorPort
 from applairo.domain.ports.job_search import JobSearchPort
 from applairo.domain.ports.offer_evaluation import OfferEvaluationPort
@@ -39,6 +40,8 @@ class JobSearchWorkflow:
         offer_evaluation: OfferEvaluationPort,
         max_search_combos: int,
         eval_top_n: int,
+        model: str,
+        pricing: Pricing,
     ) -> None:
         self._cv_extractor = cv_extractor
         self._profile_extraction = profile_extraction
@@ -46,11 +49,23 @@ class JobSearchWorkflow:
         self._offer_evaluation = offer_evaluation
         self._max_search_combos = max_search_combos
         self._eval_top_n = eval_top_n
+        # Modèle + grille tarifaire : servent à traduire une consommation de
+        # tokens en coût USD affiché en direct (par appel et par cycle).
+        self._model = model
+        self._pricing = pricing
 
-    async def profile_from_cv(self, content: bytes, filename: str) -> SearchProfile:
-        """Étapes 1-3 : extrait le texte du CV puis en déduit un profil de recherche."""
+    def _call_usage(self, usage: TokenUsage | None) -> CallUsage | None:
+        """Enrobe une consommation brute avec le modèle et le coût USD (ou None)."""
+        return CallUsage.of(self._model, usage, self._pricing) if usage else None
+
+    async def profile_from_cv(
+        self, content: bytes, filename: str
+    ) -> tuple[SearchProfile, CallUsage | None]:
+        """Étapes 1-3 : extrait le texte du CV, en déduit un profil, et rapporte
+        la consommation de l'appel (tokens + coût) pour l'affichage."""
         text = self._cv_extractor.extract_text(content, filename)
-        return await self._profile_extraction.extract_profile(text)
+        profile, usage = await self._profile_extraction.extract_profile(text)
+        return profile, self._call_usage(usage)
 
     async def search(self, profile: SearchProfile) -> list[ScoredJob]:
         """Étape 5 : fan-out de recherche, entrelacement, dédoublonnage, coupe, comité."""
@@ -126,10 +141,20 @@ class JobSearchWorkflow:
                         )
                     )
 
-                    def on_member_done(member: str, count: int) -> None:
-                        queue.put_nowait(
-                            Progress("member_done", {"member": member, "count": count})
-                        )
+                    def on_member_done(member: str, count: int, usage: TokenUsage | None) -> None:
+                        data: dict = {"member": member, "count": count}
+                        call = self._call_usage(usage)
+                        if call is not None:
+                            data.update(
+                                {
+                                    "model": call.model,
+                                    "prompt_tokens": call.prompt_tokens,
+                                    "output_tokens": call.output_tokens,
+                                    "total_tokens": call.total_tokens,
+                                    "cost_usd": call.cost_usd,
+                                }
+                            )
+                        queue.put_nowait(Progress("member_done", data))
 
                     scored = await self._offer_evaluation.evaluate(profile, top, on_member_done)
                 else:

@@ -5,6 +5,7 @@
 
 from pydantic import BaseModel, Field
 
+from applairo.application.usage import CallUsage
 from applairo.domain.models import CommitteeScore, Job, ScoredJob, SearchProfile
 
 
@@ -32,6 +33,26 @@ class SearchProfileDTO(BaseModel):
             locations=tuple(loc.strip() for loc in self.locations if loc.strip()),
             level=self.level.strip(),
             contract_type=self.contract_type.strip(),
+        )
+
+
+class UsageDTO(BaseModel):
+    """Consommation d'un appel LLM (modèle, tokens, coût USD), pour l'affichage."""
+
+    model: str
+    prompt_tokens: int
+    output_tokens: int
+    total_tokens: int
+    cost_usd: float
+
+    @classmethod
+    def from_call(cls, call: CallUsage) -> "UsageDTO":
+        return cls(
+            model=call.model,
+            prompt_tokens=call.prompt_tokens,
+            output_tokens=call.output_tokens,
+            total_tokens=call.total_tokens,
+            cost_usd=call.cost_usd,
         )
 
 
@@ -83,6 +104,13 @@ class ScoredJobDTO(BaseModel):
             scores=[CommitteeScoreDTO.from_domain(s) for s in scored.scores],
             overall=scored.overall,
         )
+
+
+class AnalyzeCvResponse(BaseModel):
+    """Réponse de l'étape CV : le profil déduit + la consommation de l'appel LLM."""
+
+    profile: SearchProfileDTO
+    usage: UsageDTO | None = None
 
 
 class SearchResponse(BaseModel):

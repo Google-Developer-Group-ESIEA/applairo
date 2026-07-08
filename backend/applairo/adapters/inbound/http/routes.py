@@ -23,7 +23,13 @@ from applairo.domain.errors import (
     ProfileExtractionError,
 )
 
-from .schemas import ScoredJobDTO, SearchProfileDTO, SearchResponse
+from .schemas import (
+    AnalyzeCvResponse,
+    ScoredJobDTO,
+    SearchProfileDTO,
+    SearchResponse,
+    UsageDTO,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +43,10 @@ def build_router(workflow: JobSearchWorkflow, max_upload_bytes: int) -> APIRoute
         """Sonde de vivacité (utilisée par le healthcheck Docker)."""
         return {"status": "ok"}
 
-    @router.post("/api/cv", response_model=SearchProfileDTO)
-    async def analyze_cv(file: UploadFile = File(...)) -> SearchProfileDTO:
-        """Étapes 1-3 : reçoit un CV et retourne le profil de recherche déduit."""
+    @router.post("/api/cv", response_model=AnalyzeCvResponse)
+    async def analyze_cv(file: UploadFile = File(...)) -> AnalyzeCvResponse:
+        """Étapes 1-3 : reçoit un CV, retourne le profil déduit et la consommation
+        (tokens + coût) de l'appel LLM d'extraction, pour l'affichage."""
         content = await file.read()
         logger.info("CV reçu : %r (%d octets)", file.filename, len(content))
         if not content:
@@ -50,12 +57,15 @@ def build_router(workflow: JobSearchWorkflow, max_upload_bytes: int) -> APIRoute
                 detail=f"fichier trop volumineux (max {max_upload_bytes // (1024 * 1024)} Mo)",
             )
         try:
-            profile = await workflow.profile_from_cv(content, file.filename or "cv")
+            profile, usage = await workflow.profile_from_cv(content, file.filename or "cv")
         except CvExtractionError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except ProfileExtractionError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return SearchProfileDTO.from_domain(profile)
+        return AnalyzeCvResponse(
+            profile=SearchProfileDTO.from_domain(profile),
+            usage=UsageDTO.from_call(usage) if usage else None,
+        )
 
     @router.post("/api/search", response_model=SearchResponse)
     async def search(profile_dto: SearchProfileDTO) -> SearchResponse:

@@ -7,11 +7,14 @@
 
 from typing import Callable, Protocol
 
-from applairo.domain.models import Job, ScoredJob, SearchProfile
+from applairo.domain.models import Job, ScoredJob, SearchProfile, TokenUsage
 
-# Appelé dès qu'un membre a fini de noter : (nom du membre, nombre d'offres notées).
-# Sert à retransmettre l'avancement du comité en temps réel (voir search_stream).
-MemberDone = Callable[[str, int], None]
+# Appelé dès qu'un membre a fini de noter :
+#   (nom du membre, nombre d'offres notées, tokens consommés par son appel).
+# `TokenUsage` est None si la source ne renvoie pas de métadonnées. Sert à
+# retransmettre l'avancement ET la consommation du comité en temps réel
+# (voir search_stream).
+MemberDone = Callable[[str, int, TokenUsage | None], None]
 
 
 class OfferEvaluationPort(Protocol):

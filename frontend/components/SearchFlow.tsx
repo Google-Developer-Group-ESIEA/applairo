@@ -17,12 +17,13 @@ import { useState } from "react";
 
 import { analyzeCv, searchStream } from "@/lib/api";
 import { applyEvent, initialProgress, type ProgressState } from "@/lib/progress";
-import type { ScoredJob, SearchProfile } from "@/lib/types";
+import type { ScoredJob, SearchProfile, Usage } from "@/lib/types";
 
 import AgentTimeline from "./AgentTimeline";
 import ProfileForm from "./ProfileForm";
 import ResultsGrid from "./ResultsGrid";
 import Uploader from "./Uploader";
+import UsagePill from "./UsagePill";
 
 type Tab = "cv" | "search" | "results";
 
@@ -42,6 +43,8 @@ const sleep = (ms: number): Promise<void> =>
 export default function SearchFlow() {
   const [tab, setTab] = useState<Tab>("cv");
   const [profile, setProfile] = useState<SearchProfile | null>(null);
+  // Consommation de l'appel d'extraction du profil (1er des 4 appels du cycle).
+  const [profileUsage, setProfileUsage] = useState<Usage | null>(null);
   const [cvName, setCvName] = useState<string | null>(null);
   const [jobs, setJobs] = useState<ScoredJob[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -71,7 +74,8 @@ export default function SearchFlow() {
       // On attend le résultat ET la durée mini : l'affichage ne file jamais en
       // dessous de CV_LOAD_MS. Si l'analyse échoue, Promise.all rejette aussitôt.
       const [deduced] = await Promise.all([analyzeCv(file), sleep(CV_LOAD_MS)]);
-      setProfile(deduced);
+      setProfile(deduced.profile);
+      setProfileUsage(deduced.usage);
       setCvName(file.name);
       setJobs(null); // les anciens resultats ne correspondent plus au nouveau CV
       setProgress(null); // ... la frise de l'ancien CV non plus
@@ -189,6 +193,10 @@ export default function SearchFlow() {
           onNewCv={() => setTab("cv")}
         />
       )}
+
+      {/* Pastille de consommation : hors des onglets, visible partout, se remplit
+          au fil de l'eau (profil puis comité). */}
+      <UsagePill profileUsage={profileUsage} progress={progress} />
     </main>
   );
 }

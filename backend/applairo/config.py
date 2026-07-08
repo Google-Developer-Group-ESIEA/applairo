@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     # (jusqu'à eval_top_n évaluations).
     max_output_tokens: int = 8192
 
+    # Tarifs Gemini pour l'affichage EN DIRECT du coût (USD par million de tokens).
+    # Défaut = grille gemini-2.5-flash (juillet 2026 : 0,30 $ en entrée, 2,50 $ en
+    # sortie, par million). À AJUSTER si le modèle ou la grille changent : ces
+    # valeurs sont ce que le public voit affiché, elles doivent rester exactes.
+    # NB : les tokens de « réflexion » (thinking) sont facturés comme de la sortie.
+    price_input_usd_per_mtok: float = 0.30
+    price_output_usd_per_mtok: float = 2.50
+
     # -- Pipeline V2 (entonnoir) -------------------------------------------
     max_search_combos: int = 10  # nb max de requêtes (intitulé x localisation) en fan-out
     eval_top_n: int = 12  # nb max d'offres soumises au comité (borne le coût LLM)

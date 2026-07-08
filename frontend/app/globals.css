@@ -783,6 +783,123 @@ select:focus,
   font-weight: 700;
   color: var(--high);
 }
+/* Pastille de consommation flottante (coin bas-droite), visible sur tous les
+   onglets. Compact = « N tokens · $X » ; au survol elle grandit VERS LE HAUT
+   (bas ancre) pour detailler chaque appel + le total. */
+.usage-pill {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  max-width: min(340px, calc(100vw - 40px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-radius 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.usage-pill:hover,
+.usage-pill:focus-within {
+  border-radius: var(--radius);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.2);
+}
+/* Compact : toujours visible, en bas de la pastille. */
+.usage-pill-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.usage-pill-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--high);
+}
+/* Detail : replie par defaut, revele au survol. */
+.usage-pill-detail {
+  max-height: 0;
+  padding: 0 15px;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.2s ease,
+    opacity 0.15s ease,
+    padding 0.2s ease;
+}
+.usage-pill:hover .usage-pill-detail,
+.usage-pill:focus-within .usage-pill-detail {
+  max-height: 340px;
+  padding: 13px 15px 4px;
+  opacity: 1;
+}
+.usage-pill-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.usage-pill-head span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.usage-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.usage-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: baseline;
+  font-size: 12.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.usage-label {
+  color: var(--muted);
+}
+.usage-tokens {
+  text-align: right;
+  color: var(--text);
+}
+.usage-cost {
+  text-align: right;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 72px;
+}
+.usage-row-total {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-weight: 700;
+}
+.usage-row-total .usage-label {
+  color: var(--text);
+}
+.usage-foot {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 /* Etat « en reflexion » : les points qui clignotent + le mot qui defile. */
 .thinking {

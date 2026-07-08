@@ -2,7 +2,12 @@
 // Client HTTP côté navigateur. Appelle les route handlers Next (/api/**), qui
 // relaient vers le backend. Les composants ne connaissent que ces fonctions.
 
-import type { SearchEvent, SearchProfile, SearchResponse } from "./types";
+import type {
+  AnalyzeCvResponse,
+  SearchEvent,
+  SearchProfile,
+  SearchResponse,
+} from "./types";
 
 async function readError(res: Response, fallback: string): Promise<string> {
   try {
@@ -14,7 +19,7 @@ async function readError(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
-export async function analyzeCv(file: File): Promise<SearchProfile> {
+export async function analyzeCv(file: File): Promise<AnalyzeCvResponse> {
   const form = new FormData();
   form.append("file", file);
   const res = await fetch("/api/cv", { method: "POST", body: form });

@@ -10,6 +10,7 @@ from applairo.adapters.outbound.adk.profile_extractor import AdkProfileExtractor
 from applairo.adapters.outbound.adzuna.adzuna_job_search import AdzunaJobSearch
 from applairo.adapters.outbound.cv.document_extractor import DocumentCvExtractor
 from applairo.application.job_search_workflow import JobSearchWorkflow
+from applairo.application.usage import Pricing
 from applairo.config import Settings
 
 
@@ -45,6 +46,12 @@ def build_workflow(settings: Settings) -> JobSearchWorkflow:
         max_output_tokens=settings.max_output_tokens,
     )
 
+    # Grille tarifaire (USD/million de tokens) pour l'affichage du coût en direct.
+    pricing = Pricing(
+        input_usd_per_mtok=settings.price_input_usd_per_mtok,
+        output_usd_per_mtok=settings.price_output_usd_per_mtok,
+    )
+
     return JobSearchWorkflow(
         cv_extractor=cv_extractor,
         profile_extraction=profile_extraction,
@@ -52,4 +59,6 @@ def build_workflow(settings: Settings) -> JobSearchWorkflow:
         offer_evaluation=offer_evaluation,
         max_search_combos=settings.max_search_combos,
         eval_top_n=settings.eval_top_n,
+        model=settings.gemini_model,
+        pricing=pricing,
     )
