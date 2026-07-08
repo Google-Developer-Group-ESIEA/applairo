@@ -91,11 +91,7 @@ class JobSearchWorkflow:
                 await queue.put(
                     Progress(
                         "queries",
-                        {
-                            "queries": [
-                                {"title": c.title, "location": c.location} for c in criteria
-                            ]
-                        },
+                        {"queries": [{"title": c.title, "location": c.location} for c in criteria]},
                     )
                 )
 
