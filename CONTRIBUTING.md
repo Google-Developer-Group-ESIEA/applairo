@@ -10,8 +10,9 @@ En participant, vous acceptez de respecter notre
 
 ## Prérequis
 
-- **Python 3.10+**
-- **[uv](https://docs.astral.sh/uv/)**, gestionnaire de paquets et d'environnements
+- **[Docker](https://docs.docker.com/get-docker/)** + Docker Compose *(voie recommandée)*
+- Pour le dev local : **[uv](https://docs.astral.sh/uv/)** (backend Python) et
+  **[pnpm](https://pnpm.io/)** + **Node 20** (frontend)
 - Des clés API gratuites (voir le [README](./README.md)) : Google AI Studio et Adzuna
 
 ## Mise en route
@@ -21,15 +22,28 @@ En participant, vous acceptez de respecter notre
 git clone git@github.com:<votre-utilisateur>/applairo.git
 cd applairo
 
-# 2. Installez tout (uv crée le .venv et installe les dépendances + outils dev)
-uv sync
-
-# 3. Configurez vos clés API
+# 2. Configurez vos clés API
 cp .env.example .env   # puis renseignez les variables
 
-# 4. Lancez l'application
-uv run python app.py    # http://localhost:7860
+# 3a. Tout lancer avec Docker, mode dev avec hot reload (recommandé)
+docker compose -f docker-compose.dev.yml up --build   # front : http://localhost:3000
+
+# 3b. ...ou en local, service par service
+cd backend  && uv sync && uv run uvicorn main:app --reload   # :8000
+cd frontend && pnpm install && pnpm dev                      # :3000
 ```
+
+Le `docker compose up --build` sans `-f` lance les serveurs de production (sans
+rechargement) ; pour développer, préférez la commande `-f docker-compose.dev.yml`.
+
+## Architecture
+
+Le backend suit une **architecture hexagonale (ports & adapters)** : le domaine
+(`backend/applairo/domain/`) reste pur, les intégrations (ADK, Adzuna, HTTP) sont des
+adaptateurs. Voir le [README](./README.md#architecture) pour le détail.
+
+Règle d'or : n'importez jamais ADK, FastAPI ou `requests` dans `domain/`. Une nouvelle
+source d'offres = un nouvel adaptateur dans `adapters/outbound/`, sans toucher au domaine.
 
 ## Workflow de contribution
 
@@ -38,12 +52,19 @@ uv run python app.py    # http://localhost:7860
    git checkout -b feat/ma-fonctionnalite   # ou fix/, docs/, chore/
    ```
 2. **Codez** votre changement. Gardez les commits petits et ciblés.
-3. **Vérifiez localement** avant de pousser (c'est ce que la CI vérifie aussi) :
+3. **Vérifiez localement** avant de pousser (exactement ce que la CI vérifie) :
    ```bash
-   uv run ruff check .                                   # lint
-   uv run python -m compileall -q agent.py app.py config.py tools
-   uv run python -c "import config, tools.adzuna"        # smoke test
+   # Backend (depuis backend/)
+   uv run ruff check .                                     # lint
+   uv run ruff format --check .                            # format
+   uv run python -c "import applairo.adapters.inbound.http.app"   # smoke test
+
+   # Frontend (depuis frontend/)
+   pnpm lint                                               # ESLint
+   pnpm build                                              # type-check + build
    ```
+   La CI construit aussi les images Docker (`docker compose build`) ; en cas de doute
+   sur un changement de `Dockerfile` ou de dépendances, testez-les en local.
 4. **Poussez** et ouvrez une **Pull Request** vers `main`.
 5. La **CI** doit être verte et au moins **une revue** est requise avant le merge.
 
@@ -51,13 +72,15 @@ uv run python app.py    # http://localhost:7860
 
 - **Commits** : format [Conventional Commits](https://www.conventionalcommits.org/fr/)
   (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`).
-- **Style** : le code est linté avec [ruff](https://docs.astral.sh/ruff/).
-  Corrigez automatiquement ce qui peut l'être avec `uv run ruff check --fix .`.
+- **Style** : backend linté et formaté avec [ruff](https://docs.astral.sh/ruff/)
+  (`uv run ruff check --fix .` pour le lint, `uv run ruff format .` pour le format) ;
+  frontend vérifié avec ESLint (`pnpm lint`).
 - **Langue** : le projet est majoritairement en français (public GDG ESIEA).
   Commentaires et docs en français, noms de variables en anglais, comme
   l'existant.
-- **Dépendances** : ajoutez-les via `uv add <paquet>` (met à jour
-  `pyproject.toml` et `uv.lock`). Ne modifiez pas `uv.lock` à la main.
+- **Dépendances** : backend via `uv add <paquet>` (met à jour `pyproject.toml` +
+  `uv.lock`), frontend via `pnpm add <paquet>` (dans `frontend/`). Ne modifiez pas
+  les lockfiles à la main.
 
 ## Signaler un bug ou proposer une idée
 

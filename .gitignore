@@ -7,6 +7,13 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
+.ruff_cache/
+
+# Node / Next.js (frontend)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
 
 # Fichiers IDE
 .vscode/

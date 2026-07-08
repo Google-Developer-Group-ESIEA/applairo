@@ -14,8 +14,8 @@ Closes #<numéro-de-l-issue>
 
 ## Checklist
 
-- [ ] La CI passe (`uv run ruff check .` en local est vert)
-- [ ] J'ai testé mon changement localement (`uv run python app.py`)
+- [ ] La CI passe (backend : `uv run ruff check .` ; frontend : `pnpm build`)
+- [ ] J'ai testé mon changement localement (`docker compose up --build`)
 - [ ] Les commits suivent [Conventional Commits](https://www.conventionalcommits.org/fr/)
 - [ ] La documentation (README, etc.) est à jour si nécessaire
 - [ ] Aucune clé API / secret n'est committé
