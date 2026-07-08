@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     retry_max: int = 3  # tentatives sur erreur 429
     retry_delay: int = 5  # délai initial (s), doublé à chaque essai
 
+    # -- Pipeline V2 (entonnoir) -------------------------------------------
+    max_search_combos: int = 6  # nb max de requêtes (intitulé x localisation) en fan-out
+    eval_top_n: int = 12  # nb max d'offres soumises au comité (borne le coût LLM)
+    max_upload_bytes: int = 5 * 1024 * 1024  # taille max d'un CV uploadé (5 Mo)
+
     # -- Divers -------------------------------------------------------------
     app_name: str = "job_search_agent"
     log_level: str = "INFO"  # DEBUG pour tracer les URLs/paramètres complets
