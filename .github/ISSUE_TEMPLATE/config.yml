@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Question / discussion
+    url: https://github.com/Google-Developer-Group-ESIEA/applairo/discussions
+    about: Pour les questions générales et l'entraide (activez les Discussions dans les paramètres du repo).

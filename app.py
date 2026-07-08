@@ -13,7 +13,6 @@
 # Interface disponible sur : http://localhost:7860
 
 import os
-import asyncio
 import uuid
 from dotenv import load_dotenv
 
