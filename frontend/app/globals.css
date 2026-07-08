@@ -191,6 +191,71 @@ button {
   color: var(--muted);
 }
 
+/* Etapes d'analyse du CV (Telechargement / Extraction / Analyse) */
+.cv-steps {
+  list-style: none;
+  margin: 18px auto 0;
+  padding: 0;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+.cv-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+  transition: color 0.25s;
+}
+.cv-step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  transition: all 0.25s;
+}
+.cv-step-label {
+  flex: 1;
+}
+
+.cv-step-active {
+  color: var(--text);
+  font-weight: 600;
+}
+.cv-step-active .cv-step-marker {
+  border-color: var(--accent);
+  animation: phase-pulse 1.4s ease-in-out infinite;
+}
+
+.cv-step-done {
+  color: var(--text);
+}
+.cv-step-done .cv-step-marker {
+  border-color: var(--high);
+  background: var(--high);
+}
+.cv-step-done .cv-step-marker::after {
+  content: "";
+  width: 4px;
+  height: 8px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.cv-step-pending {
+  opacity: 0.6;
+}
+
 /* ---- Formulaire profil ---- */
 .field {
   display: block;
@@ -816,6 +881,232 @@ select:focus,
   to {
     width: 100%;
   }
+}
+
+/* ---- Page « Comment ca marche » (explicative, statique) ---- */
+.hiw {
+  max-width: 860px;
+}
+
+.hiw-back {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+/* Encart du principe cle : le cout LLM borne par construction. */
+.hiw-keystone {
+  max-width: none;
+  text-align: center;
+  border-color: var(--accent-border);
+  background: linear-gradient(180deg, var(--accent-soft), var(--surface));
+}
+.hiw-keystone-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.hiw-keystone-headline {
+  margin: 0 auto 14px;
+  max-width: 620px;
+  font-size: 23px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hiw-keystone-headline strong {
+  color: var(--accent);
+}
+.hiw-keystone-body {
+  margin: 0 auto;
+  max-width: 620px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.hiw-keystone-body strong {
+  color: var(--text);
+}
+
+.hiw-section {
+  margin-top: 48px;
+}
+.hiw-h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+.hiw-section-lead {
+  margin: 0 auto 24px;
+  max-width: 620px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+/* Rail vertical statique (emprunte a la frise, sans l'animation « en cours »). */
+.hiw-steps {
+  list-style: none;
+  margin: 24px auto 0;
+  padding: 0;
+  max-width: 680px;
+}
+.hiw-step {
+  display: flex;
+  gap: 18px;
+  padding-bottom: 26px;
+}
+.hiw-step:last-child {
+  padding-bottom: 0;
+}
+.hiw-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.hiw-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+.hiw-step-ia .hiw-marker {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.hiw-rail::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  margin-top: 8px;
+  background: var(--border);
+}
+.hiw-step:last-child .hiw-rail::after {
+  display: none;
+}
+
+.hiw-step-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+.hiw-step-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.hiw-step-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 600;
+}
+.hiw-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.hiw-badge-ia {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+}
+.hiw-badge-mecanique {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.hiw-step-text {
+  margin: 0;
+  font-size: 14.5px;
+}
+.hiw-step-detail {
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--border);
+  background: var(--bg);
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Comite : trois cartes. */
+.hiw-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+.hiw-member {
+  max-width: none;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 20px;
+}
+.hiw-member-lens {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Partis pris : grille de cartes. */
+.hiw-principles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.hiw-principle {
+  max-width: none;
+  padding: 22px;
+}
+.hiw-principle-title {
+  margin: 0 0 8px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.hiw-principle-body {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.hiw-footer {
+  margin-top: 48px;
+  text-align: center;
+}
+.hiw-cta {
+  width: auto;
+  display: inline-block;
+  padding: 13px 32px;
+  text-decoration: none;
+}
+
+/* ---- Lien discret vers l'explication, depuis l'accueil ---- */
+.hiw-link {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 13px;
+  text-decoration: none;
+}
+.hiw-link:hover {
+  text-decoration: underline;
 }
 
 /* ---- Erreur ---- */

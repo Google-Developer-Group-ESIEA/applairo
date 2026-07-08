@@ -31,7 +31,13 @@ type Tab = "cv" | "search" | "results";
 // se finaliser. La barre d'indication est animée sur cette même durée.
 const REDIRECT_DELAY_MS = 1800;
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// Analyse du CV : durée mini affichée (ressenti "premium"), défilée sur 3 étapes
+// de 1,5 s chacune, quelle que soit la vitesse réelle du backend.
+const CV_PHASES = 3;
+const CV_LOAD_MS = 4500;
+
+const sleep = (ms: number): Promise<void> =>
+  new Promise((r) => setTimeout(r, ms));
 
 export default function SearchFlow() {
   const [tab, setTab] = useState<Tab>("cv");
@@ -42,6 +48,8 @@ export default function SearchFlow() {
   const [error, setError] = useState<string | null>(null);
   // Vrai pendant la pause "finalisation" juste avant la bascule vers les résultats.
   const [finalizing, setFinalizing] = useState(false);
+  // Étape courante d'analyse du CV (0..CV_PHASES-1), pendant l'upload.
+  const [cvPhase, setCvPhase] = useState(0);
   // Avancement de la recherche. Non nul pendant le run ET après : la frise reste
   // montée dans l'onglet Recherche une fois le pipeline terminé (trace du travail
   // des agents). On ne le remet à zéro qu'au lancement d'une nouvelle recherche
@@ -51,8 +59,18 @@ export default function SearchFlow() {
   async function handleFile(file: File) {
     setBusy(true);
     setError(null);
+    setCvPhase(0);
+    // Fait défiler les étapes (Téléchargement / Extraction / Analyse) sur une
+    // durée fixe. Purement visuel : la vraie analyse tourne en parallèle.
+    const step = CV_LOAD_MS / CV_PHASES;
+    const timers = [
+      setTimeout(() => setCvPhase(1), step),
+      setTimeout(() => setCvPhase(2), step * 2),
+    ];
     try {
-      const deduced = await analyzeCv(file);
+      // On attend le résultat ET la durée mini : l'affichage ne file jamais en
+      // dessous de CV_LOAD_MS. Si l'analyse échoue, Promise.all rejette aussitôt.
+      const [deduced] = await Promise.all([analyzeCv(file), sleep(CV_LOAD_MS)]);
       setProfile(deduced);
       setCvName(file.name);
       setJobs(null); // les anciens resultats ne correspondent plus au nouveau CV
@@ -61,7 +79,9 @@ export default function SearchFlow() {
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      timers.forEach(clearTimeout);
       setBusy(false);
+      setCvPhase(0);
     }
   }
 
@@ -113,6 +133,11 @@ export default function SearchFlow() {
         <p className="tagline">
           Votre CV, analysé et confronté à de vraies offres par un comité d&apos;agents.
         </p>
+        <p>
+          <a href="/comment-ca-marche" className="hiw-link">
+            Comment ça marche ?
+          </a>
+        </p>
         <nav className="tabs">
           {tabs.map((t, i) => (
             <button
@@ -132,7 +157,12 @@ export default function SearchFlow() {
       {error && <p className="error">{error}</p>}
 
       {tab === "cv" && (
-        <Uploader onSelect={handleFile} busy={busy} currentName={cvName} />
+        <Uploader
+          onSelect={handleFile}
+          busy={busy}
+          currentName={cvName}
+          phase={cvPhase}
+        />
       )}
       {/* Onglet Recherche : le formulaire, puis la frise des agents qui reste
           montée pendant ET après la recherche (trace du travail des agents). */}
