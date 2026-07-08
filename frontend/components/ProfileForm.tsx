@@ -24,6 +24,15 @@ export default function ProfileForm({ initial, busy, onSearch }: Props) {
   const [level, setLevel] = useState(initial.level || "intermédiaire");
   const [contract, setContract] = useState(initial.contract_type);
 
+  // Le modele peut deduire une valeur hors des listes fixes (ex: niveau
+  // "confirme", contrat "freelance"). Un <select> controle dont la valeur n'est
+  // dans aucune option s'affiche vide et perd la donnee : on injecte donc la
+  // valeur courante comme option si elle manque.
+  const levelOptions = LEVELS.includes(level) ? LEVELS : [level, ...LEVELS];
+  const contractOptions = CONTRACTS.includes(contract)
+    ? CONTRACTS
+    : [...CONTRACTS, contract];
+
   const canSearch = titles.length > 0 && locations.length > 0 && !busy;
 
   function submit() {
@@ -59,7 +68,7 @@ export default function ProfileForm({ initial, busy, onSearch }: Props) {
         <label className="field">
           <span className="field-label">Niveau</span>
           <select value={level} onChange={(e) => setLevel(e.target.value)}>
-            {LEVELS.map((l) => (
+            {levelOptions.map((l) => (
               <option key={l} value={l}>
                 {l}
               </option>
@@ -69,7 +78,7 @@ export default function ProfileForm({ initial, busy, onSearch }: Props) {
         <label className="field">
           <span className="field-label">Contrat</span>
           <select value={contract} onChange={(e) => setContract(e.target.value)}>
-            {CONTRACTS.map((c) => (
+            {contractOptions.map((c) => (
               <option key={c} value={c}>
                 {c || "indifferent"}
               </option>
