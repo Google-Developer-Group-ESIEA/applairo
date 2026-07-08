@@ -51,9 +51,9 @@ espaces publics.
 ## Application
 
 Les cas de comportement abusif, harcelant ou autrement inacceptable peuvent être
-signalés aux responsables de la communauté à l'adresse **[INSÉRER UN MOYEN DE
-CONTACT]**. Toutes les plaintes seront examinées et feront l'objet d'une enquête
-rapide et équitable.
+signalés aux responsables de la communauté à l'adresse **blanchot@et.esiea.fr**.
+Toutes les plaintes seront examinées et feront l'objet d'une enquête rapide et
+équitable.
 
 Tous les responsables de la communauté sont tenus de respecter la vie privée et
 la sécurité de la personne ayant signalé un incident.
