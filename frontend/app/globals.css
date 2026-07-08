@@ -884,32 +884,203 @@ select:focus,
   }
 }
 
-/* ---- Page « Comment ca marche » (explicative, statique) ---- */
+/* ==== Page « Comment ca marche » (explicative, animee) ================== */
 .hiw {
-  max-width: 860px;
+  max-width: 880px;
 }
 
-.hiw-back {
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 20px;
+/* Reveal au defilement : chaque bloc glisse et s'estompe a l'entree. Coupe
+   net (visible d'emblee) sous prefers-reduced-motion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-in {
+  opacity: 1;
+  transform: none;
 }
 
-/* Encart du principe cle : le cout LLM borne par construction. */
+/* Decor de fond : halos qui derivent lentement derriere le contenu. Fixe au
+   viewport pour couvrir toute la page, pas seulement la colonne de contenu. */
+.hiw-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hiw-orb {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+}
+.hiw-orb-1 {
+  top: -140px;
+  left: -120px;
+  background: radial-gradient(circle at center, #93c5fd, transparent 70%);
+  animation: hiw-drift-1 22s ease-in-out infinite;
+}
+.hiw-orb-2 {
+  top: 220px;
+  right: -160px;
+  background: radial-gradient(circle at center, #c7d2fe, transparent 70%);
+  animation: hiw-drift-2 26s ease-in-out infinite;
+}
+@keyframes hiw-drift-1 {
+  50% {
+    transform: translate(60px, 50px) scale(1.12);
+  }
+}
+@keyframes hiw-drift-2 {
+  50% {
+    transform: translate(-50px, 40px) scale(1.08);
+  }
+}
+
+/* Le contenu passe au-dessus du decor. On exclut le bouton epingle, qui garde
+   son propre `position: absolute` (sinon cette regle le repasserait en relative
+   et le sortirait du coin). */
+.hiw > *:not(.hiw-aurora):not(.hiw-corner) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- En-tete ---- */
+.hiw-hero {
+  margin-bottom: 8px;
+}
+.hiw-title {
+  background: linear-gradient(120deg, var(--text) 30%, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---- La promesse : l'offre notee par trois experts ---- */
 .hiw-keystone {
   max-width: none;
+  margin-top: 12px;
   text-align: center;
   border-color: var(--accent-border);
-  background: linear-gradient(180deg, var(--accent-soft), var(--surface));
+  background: radial-gradient(
+    120% 140% at 50% -20%,
+    var(--accent-soft),
+    var(--surface) 60%
+  );
+  box-shadow: 0 18px 40px -24px rgba(37, 99, 235, 0.45);
 }
 .hiw-keystone-eyebrow {
-  margin: 0 0 10px;
+  margin: 0 0 18px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
 }
+
+/* Apercu du verdict : RH / Tech lead / Marche -> note. */
+.hiw-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.hiw-vchip {
+  padding: 7px 15px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid;
+}
+.hiw-vchip-rh {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.hiw-vchip-tech {
+  color: var(--high);
+  background: var(--high-soft);
+  border-color: #bbf7d0;
+}
+.hiw-vchip-market {
+  color: var(--mid);
+  background: var(--mid-soft);
+  border-color: #fde68a;
+}
+.hiw-varrow {
+  width: 22px;
+  height: 2px;
+  background: var(--muted);
+  position: relative;
+  opacity: 0.6;
+}
+.hiw-varrow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--muted);
+  border-right: 2px solid var(--muted);
+  transform: rotate(45deg);
+}
+.hiw-vscore {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 10px 22px -10px rgba(37, 99, 235, 0.8);
+}
+.hiw-vscore small {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+/* Le verdict s'assemble en cascade avec l'encart. */
+.reveal .hiw-vchip,
+.reveal .hiw-varrow,
+.reveal .hiw-vscore {
+  opacity: 0;
+  transform: translateY(10px) scale(0.92);
+}
+.reveal-in .hiw-vchip,
+.reveal-in .hiw-varrow,
+.reveal-in .hiw-vscore {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.45s ease-out,
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.reveal-in .hiw-vchip-tech {
+  transition-delay: 0.12s;
+}
+.reveal-in .hiw-vchip-market {
+  transition-delay: 0.24s;
+}
+.reveal-in .hiw-varrow {
+  transition-delay: 0.36s;
+}
+.reveal-in .hiw-vscore {
+  transition-delay: 0.48s;
+}
+
 .hiw-keystone-headline {
   margin: 0 auto 14px;
   max-width: 620px;
@@ -927,37 +1098,36 @@ select:focus,
   font-size: 14.5px;
   color: var(--muted);
 }
-.hiw-keystone-body strong {
-  color: var(--text);
-}
 
+/* ---- Sections ---- */
 .hiw-section {
-  margin-top: 48px;
+  margin-top: 56px;
+}
+.hiw-section-head {
+  text-align: center;
 }
 .hiw-h2 {
   margin: 0 0 8px;
   font-size: 22px;
   letter-spacing: -0.01em;
-  text-align: center;
 }
 .hiw-section-lead {
-  margin: 0 auto 24px;
+  margin: 0 auto 8px;
   max-width: 620px;
-  text-align: center;
   color: var(--muted);
   font-size: 14.5px;
 }
 
-/* Rail vertical statique (emprunte a la frise, sans l'animation « en cours »). */
+/* ---- Parcours : rail vertical anime ---- */
 .hiw-steps {
   list-style: none;
-  margin: 24px auto 0;
+  margin: 28px auto 0;
   padding: 0;
-  max-width: 680px;
+  max-width: 700px;
 }
 .hiw-step {
   display: flex;
-  gap: 18px;
+  gap: 20px;
   padding-bottom: 26px;
 }
 .hiw-step:last-child {
@@ -970,29 +1140,61 @@ select:focus,
   flex-shrink: 0;
 }
 .hiw-marker {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
   background: var(--surface);
-  color: var(--text);
-  font-size: 14px;
+  color: var(--muted);
+  box-shadow: 0 4px 14px -8px rgba(15, 23, 42, 0.4);
+}
+.hiw-marker-icon {
+  width: 22px;
+  height: 22px;
+}
+.hiw-marker-n {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--text);
+  color: #fff;
+  font-size: 11px;
   font-weight: 700;
 }
 .hiw-step-ia .hiw-marker {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(37, 99, 235, 0.7);
+}
+.hiw-step-ia .hiw-marker-n {
+  background: #fff;
   color: var(--accent);
 }
+/* Le trait de liaison se « dessine » quand l'etape apparait. */
 .hiw-rail::after {
   content: "";
   flex: 1;
   width: 2px;
   margin-top: 8px;
-  background: var(--border);
+  border-radius: 2px;
+  background: linear-gradient(var(--accent-border), var(--border));
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.6s ease-out 0.2s;
+}
+.hiw-step.reveal-in .hiw-rail::after {
+  transform: scaleY(1);
 }
 .hiw-step:last-child .hiw-rail::after {
   display: none;
@@ -1001,14 +1203,14 @@ select:focus,
 .hiw-step-body {
   flex: 1;
   min-width: 0;
-  padding-top: 4px;
+  padding: 2px 0 4px;
 }
 .hiw-step-head {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 .hiw-step-title {
   margin: 0;
@@ -1016,70 +1218,157 @@ select:focus,
   font-weight: 600;
 }
 .hiw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 11.5px;
   font-weight: 700;
   white-space: nowrap;
 }
+.hiw-badge-icon {
+  width: 12px;
+  height: 12px;
+}
 .hiw-badge-ia {
   background: var(--accent-soft);
   border: 1px solid var(--accent-border);
   color: var(--accent);
 }
-.hiw-badge-mecanique {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
 .hiw-step-text {
   margin: 0;
   font-size: 14.5px;
-}
-.hiw-step-detail {
-  margin: 8px 0 0;
-  padding: 10px 14px;
-  border-left: 2px solid var(--border);
-  background: var(--bg);
-  border-radius: 0 8px 8px 0;
-  font-size: 13px;
   color: var(--muted);
 }
 
-/* Comite : trois cartes. */
+/* ---- Comite : cartes-personnages, une couleur par expert ---- */
 .hiw-members {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 16px;
+  margin-top: 28px;
 }
 .hiw-member {
+  --m: var(--accent);
+  --m-soft: var(--accent-soft);
+  --m-border: var(--accent-border);
   max-width: none;
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 20px;
+  flex-direction: column;
+  padding: 22px;
+  border-top: 3px solid var(--m);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.hiw-member-tech {
+  --m: var(--high);
+  --m-soft: var(--high-soft);
+  --m-border: #bbf7d0;
+}
+.hiw-member-market {
+  --m: var(--mid);
+  --m-soft: var(--mid-soft);
+  --m-border: #fde68a;
+}
+.hiw-member:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px -20px color-mix(in srgb, var(--m) 55%, transparent);
+}
+.hiw-member-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--m-soft);
+  border: 1px solid var(--m-border);
+  color: var(--m);
+}
+.hiw-member-avatar svg {
+  width: 24px;
+  height: 24px;
+}
+.hiw-member-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.hiw-member-role {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--m);
 }
 .hiw-member-lens {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   font-size: 13px;
   color: var(--muted);
 }
 
-/* Partis pris : grille de cartes. */
+/* ---- Confiance : grille de cartes a icone coloree ---- */
 .hiw-principles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  margin-top: 28px;
+}
+@media (max-width: 560px) {
+  .hiw-principles {
+    grid-template-columns: 1fr;
+  }
 }
 .hiw-principle {
+  --p: var(--accent);
+  --p-soft: var(--accent-soft);
+  --p-border: var(--accent-border);
   max-width: none;
   padding: 22px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+.hiw-principle-tech {
+  --p: var(--high);
+  --p-soft: var(--high-soft);
+  --p-border: #bbf7d0;
+}
+.hiw-principle-market {
+  --p: var(--mid);
+  --p-soft: var(--mid-soft);
+  --p-border: #fde68a;
+}
+.hiw-principle:hover {
+  transform: translateY(-4px);
+  border-color: var(--p-border);
+  box-shadow: 0 16px 34px -20px color-mix(in srgb, var(--p) 55%, transparent);
+}
+.hiw-principle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--p-soft);
+  border: 1px solid var(--p-border);
+  color: var(--p);
+}
+.hiw-principle-icon svg {
+  width: 22px;
+  height: 22px;
 }
 .hiw-principle-title {
   margin: 0 0 8px;
   font-size: 15.5px;
   font-weight: 600;
-  color: var(--accent);
 }
 .hiw-principle-body {
   margin: 0;
@@ -1087,18 +1376,28 @@ select:focus,
   color: var(--muted);
 }
 
+/* ---- Pied : appel a l'action ---- */
 .hiw-footer {
-  margin-top: 48px;
+  margin-top: 56px;
   text-align: center;
 }
 .hiw-cta {
   width: auto;
   display: inline-block;
-  padding: 13px 32px;
+  padding: 14px 34px;
   text-decoration: none;
+  box-shadow: 0 12px 26px -12px rgba(37, 99, 235, 0.8);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.15s ease;
+}
+.hiw-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.9);
 }
 
-/* ---- Bouton « Comment ca marche » epingle en haut a droite de l'accueil ---- */
+/* ---- Bouton epingle en haut a droite (accueil + retour) ---- */
 .hiw-corner {
   position: absolute;
   top: 24px;
@@ -1111,6 +1410,34 @@ select:focus,
     right: 16px;
     padding: 7px 12px;
     font-size: 13px;
+  }
+}
+
+/* ---- Moins d'animation : tout devient statique ---- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-in,
+  .reveal .hiw-vchip,
+  .reveal .hiw-varrow,
+  .reveal .hiw-vscore,
+  .reveal-in .hiw-vchip,
+  .reveal-in .hiw-varrow,
+  .reveal-in .hiw-vscore {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .hiw-orb {
+    animation: none;
+  }
+  .hiw-rail::after {
+    transform: scaleY(1);
+    transition: none;
+  }
+  .hiw-member:hover,
+  .hiw-principle:hover,
+  .hiw-cta:hover {
+    transform: none;
   }
 }
 
