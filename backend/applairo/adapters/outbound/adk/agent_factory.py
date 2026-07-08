@@ -6,12 +6,16 @@
 # La mise en forme des offres en markdown est ici (présentation destinée au LLM),
 # volontairement séparée de l'adaptateur Adzuna qui, lui, ne renvoie que des `Job`.
 
+import logging
+
 from google.adk.agents import LlmAgent
 from google.genai import types
 
 from applairo.domain.errors import JobSearchError
 from applairo.domain.models import Job, SearchCriteria
 from applairo.domain.ports.job_search import JobSearchPort
+
+logger = logging.getLogger(__name__)
 
 # Le prompt système définit le comportement et la personnalité de l'agent.
 # Il guide le LLM pour poser les questions dans le bon ordre et déclencher la
@@ -79,10 +83,20 @@ def build_agent(
             experience=experience,
             contract_type=contract_type,
         )
+        # Trace ce que le modèle a réellement extrait et transmis à l'outil.
+        logger.info(
+            "Outil search_jobs appelé | title=%r location=%r experience=%r contract_type=%r",
+            title,
+            location,
+            experience,
+            contract_type,
+        )
         try:
             jobs = job_search.search(criteria)
         except JobSearchError as exc:
+            logger.warning("search_jobs: échec de la recherche: %s", exc)
             return f"Erreur lors de la recherche : {exc}."
+        logger.info("search_jobs: %d offre(s) renvoyée(s) au modèle", len(jobs))
         return _format_jobs(jobs, criteria)
 
     # generate_content_config : retries automatiques sur erreur 429 (quota

@@ -10,10 +10,14 @@
 # horizontal, il suffit d'injecter un DatabaseSessionService sans rien changer
 # ici - c'est tout l'intérêt de l'inversion de dépendance.
 
+import logging
+
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import BaseSessionService
 from google.genai.types import Content, Part
+
+logger = logging.getLogger(__name__)
 
 
 class AdkConversation:
@@ -58,7 +62,26 @@ class AdkConversation:
             session_id=session_id,
             new_message=user_content,
         ):
+            self._log_tool_activity(event)
             if event.is_final_response() and event.content and event.content.parts:
                 response_text = event.content.parts[0].text or ""
 
+        logger.debug("Session %s: réponse finale (%d car.)", session_id, len(response_text))
         return response_text
+
+    @staticmethod
+    def _log_tool_activity(event) -> None:
+        """Trace les appels d'outils émis par l'agent et les réponses reçues.
+
+        Permet de voir si l'agent a bien déclenché search_jobs (et avec quels
+        arguments), plutôt que d'avoir répondu sans lancer de recherche.
+        """
+        if not (event.content and event.content.parts):
+            return
+        for part in event.content.parts:
+            call = getattr(part, "function_call", None)
+            if call:
+                logger.info("Agent -> outil %s(%s)", call.name, dict(call.args or {}))
+            response = getattr(part, "function_response", None)
+            if response:
+                logger.debug("Outil %s -> réponse reçue", response.name)

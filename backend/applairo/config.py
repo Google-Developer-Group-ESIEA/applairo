@@ -25,3 +25,4 @@ class Settings(BaseSettings):
 
     # -- Divers -------------------------------------------------------------
     app_name: str = "job_search_agent"
+    log_level: str = "INFO"  # DEBUG pour tracer les URLs/paramètres complets

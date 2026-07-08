@@ -8,10 +8,14 @@
 #
 # Documentation API : https://developer.adzuna.com/docs/search
 
+import logging
+
 import requests
 
 from applairo.domain.errors import JobSearchError
 from applairo.domain.models import Job, SearchCriteria
+
+logger = logging.getLogger(__name__)
 
 
 class AdzunaJobSearch:
@@ -35,7 +39,15 @@ class AdzunaJobSearch:
 
     def search(self, criteria: SearchCriteria) -> list[Job]:
         data = self._request(criteria)
-        return [self._to_job(raw) for raw in data.get("results", [])]
+        results = data.get("results", [])
+        # `count` = total d'offres correspondant côté Adzuna (peut dépasser la
+        # page renvoyée). Utile pour distinguer « 0 correspondance » de « page vide ».
+        logger.info(
+            "Adzuna: %d offre(s) sur cette page (total disponible: %s)",
+            len(results),
+            data.get("count", "?"),
+        )
+        return [self._to_job(raw) for raw in results]
 
     # -- interne ------------------------------------------------------------
 
@@ -54,20 +66,33 @@ class AdzunaJobSearch:
             "results_per_page": self._results_per_page,
         }
 
+        # Requête tracée SANS les secrets (app_id / app_key).
+        logger.info(
+            "Adzuna GET %s | what=%r where=%r results_per_page=%d",
+            url,
+            what_query,
+            criteria.location,
+            self._results_per_page,
+        )
+
         try:
             response = requests.get(url, params=params, timeout=self._timeout)
             response.raise_for_status()
+            logger.debug("Adzuna: réponse HTTP %d", response.status_code)
             return response.json()
         except requests.exceptions.ConnectionError as exc:
+            logger.warning("Adzuna injoignable: %s", exc)
             raise JobSearchError(
                 "impossible de joindre l'API Adzuna (vérifiez la connexion internet)"
             ) from exc
         except requests.exceptions.HTTPError as exc:
             status = exc.response.status_code if exc.response is not None else "?"
+            logger.warning("Adzuna: réponse HTTP %s", status)
             raise JobSearchError(
                 f"réponse {status} de l'API Adzuna (vérifiez les clés API)"
             ) from exc
         except requests.exceptions.RequestException as exc:
+            logger.warning("Adzuna: échec de la requête: %s", exc)
             raise JobSearchError(f"échec de la requête Adzuna : {exc}") from exc
 
     @staticmethod

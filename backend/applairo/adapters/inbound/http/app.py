@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from applairo.bootstrap import build_chat_service
 from applairo.config import Settings
+from applairo.logging_config import configure_logging
 
 from .routes import build_router
 
@@ -15,6 +16,7 @@ from .routes import build_router
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Assemble l'application HTTP à partir de la configuration."""
     settings = settings or Settings()
+    configure_logging(settings.log_level)
     chat_service = build_chat_service(settings)
 
     app = FastAPI(title="Applairo API", version="0.1.0")
