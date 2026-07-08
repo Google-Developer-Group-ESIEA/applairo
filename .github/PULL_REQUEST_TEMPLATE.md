@@ -6,11 +6,11 @@ Closes #<numéro-de-l-issue>
 
 ## Type de changement
 
-- [ ] 🐛 Correction de bug
-- [ ] ✨ Nouvelle fonctionnalité
-- [ ] 📝 Documentation
-- [ ] ♻️ Refactorisation / nettoyage
-- [ ] 🔧 Configuration / outillage
+- [ ] Correction de bug
+- [ ] Nouvelle fonctionnalité
+- [ ] Documentation
+- [ ] Refactorisation / nettoyage
+- [ ] Configuration / outillage
 
 ## Checklist
 

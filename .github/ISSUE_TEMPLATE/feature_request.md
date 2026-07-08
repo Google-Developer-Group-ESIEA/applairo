@@ -1,5 +1,5 @@
 ---
-name: ✨ Proposition de fonctionnalité
+name: Proposition de fonctionnalité
 about: Suggérer une idée pour Applairo
 title: "[Feature] "
 labels: enhancement

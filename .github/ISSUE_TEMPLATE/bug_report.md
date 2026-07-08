@@ -1,5 +1,5 @@
 ---
-name: 🐛 Rapport de bug
+name: Rapport de bug
 about: Signaler un dysfonctionnement pour nous aider à l'améliorer
 title: "[Bug] "
 labels: bug

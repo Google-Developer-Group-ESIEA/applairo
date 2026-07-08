@@ -1,20 +1,18 @@
 # Contribuer à Applairo
 
-Merci de votre intérêt pour **Applairo** ! 🎉
-Ce projet est né d'une démo **Google Developer Group × ESIEA** pour montrer ce
-qu'on peut construire avec l'IA aujourd'hui. Les contributions — code, docs,
-idées, corrections de bugs — sont les bienvenues, débutants inclus.
+Merci de votre intérêt pour **Applairo**.
+Ce projet est né d'une démo Google Developer Group x ESIEA pour montrer ce
+qu'on peut construire avec l'IA aujourd'hui. Les contributions (code, docs,
+idées, corrections de bugs) sont les bienvenues, débutants inclus.
 
 En participant, vous acceptez de respecter notre
 [Code de Conduite](./CODE_OF_CONDUCT.md).
 
----
-
 ## Prérequis
 
 - **Python 3.10+**
-- **[uv](https://docs.astral.sh/uv/)** — gestionnaire de paquets/environnements
-- Des clés API gratuites (voir le [README](./README.md)) : Google AI Studio & Adzuna
+- **[uv](https://docs.astral.sh/uv/)**, gestionnaire de paquets et d'environnements
+- Des clés API gratuites (voir le [README](./README.md)) : Google AI Studio et Adzuna
 
 ## Mise en route
 
@@ -56,18 +54,16 @@ uv run python app.py    # http://localhost:7860
 - **Style** : le code est linté avec [ruff](https://docs.astral.sh/ruff/).
   Corrigez automatiquement ce qui peut l'être avec `uv run ruff check --fix .`.
 - **Langue** : le projet est majoritairement en français (public GDG ESIEA).
-  Commentaires et docs en français, noms de variables en anglais — comme
+  Commentaires et docs en français, noms de variables en anglais, comme
   l'existant.
 - **Dépendances** : ajoutez-les via `uv add <paquet>` (met à jour
-  `pyproject.toml` + `uv.lock`). Ne modifiez pas `uv.lock` à la main.
+  `pyproject.toml` et `uv.lock`). Ne modifiez pas `uv.lock` à la main.
 
-## Signaler un bug / proposer une idée
+## Signaler un bug ou proposer une idée
 
 Ouvrez une [issue](../../issues/new/choose) en utilisant le bon template.
 Plus il y a de contexte (étapes de repro, logs, capture), plus c'est facile
 à traiter.
 
----
-
-Des questions ? Ouvrez une issue avec le label `question` — on est là pour
-aider, surtout si c'est votre première contribution open source. 💚
+Des questions ? Ouvrez une issue avec le label `question`. On est là pour
+aider, surtout si c'est votre première contribution open source.
