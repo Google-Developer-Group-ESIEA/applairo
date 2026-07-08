@@ -1,5 +1,7 @@
 # Dépendances
 /node_modules
+# Store pnpm local (créé par un install dans le conteneur via le bind mount)
+/.pnpm-store
 
 # Build Next.js
 /.next

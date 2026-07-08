@@ -1,232 +1,145 @@
 // app/comment-ca-marche/HowItWorks.tsx
-// Rendu anime de la page « Comment ça marche ». Composant client : il gere le
-// reveal au defilement (IntersectionObserver) et les micro-interactions.
+// Rendu anime de la page « Comment ça marche », ecrite pour l'utilisateur final
+// (un candidat qui veut booster sa recherche avec des agents IA), pas pour un
+// developpeur : on parle benefice et confiance, jamais tuyauterie technique.
 //
-// Contraintes d'accessibilite tenues :
-//   - tout est visible immediatement si `prefers-reduced-motion: reduce` ;
-//   - les animations n'utilisent que `transform` / `opacity` (pas de reflow) ;
-//   - entree en ease-out, echelonnee, jamais d'animation infinie decorative
-//     (hors decor de fond, lui aussi coupe en reduced-motion).
-//
-// Le contenu suit le fil du backend : CV -> profil -> recherche -> selection ->
-// comite, en distinguant a chaque etape ce qui coute un appel IA. Les chiffres
-// cites sont les valeurs PAR DEFAUT (config.py), pilotees par la configuration.
+// Composant client : il gere le reveal au defilement (IntersectionObserver) et
+// les micro-interactions. Accessibilite tenue :
+//   - tout est visible d'emblee si `prefers-reduced-motion: reduce` ;
+//   - les animations n'utilisent que `transform` / `opacity` (pas de reflow).
 
 "use client";
 
 import Link from "next/link";
 import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+  Briefcase,
+  Code2,
+  FileText,
+  Filter,
+  Handshake,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/* --- Icones (trace Lucide, stroke 1.75, currentColor) ------------------- */
+/* --- Donnees (icones : bibliotheque Lucide) ----------------------------- */
 
-type IconProps = { className?: string };
-
-function IconDoc({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-      <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" />
-      <path d="M9 12h6M9 16h6M9 8h1" />
-    </svg>
-  );
-}
-function IconSparkles({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3Z" />
-      <path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z" />
-    </svg>
-  );
-}
-function IconSearch({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <circle cx="11" cy="11" r="7" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-}
-function IconFunnel({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M3 4h18l-7 8v7l-4 2v-9L3 4Z" />
-    </svg>
-  );
-}
-function IconUsers({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11" />
-    </svg>
-  );
-}
-function IconCoins({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <circle cx="8" cy="8" r="6" />
-      <path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82" />
-    </svg>
-  );
-}
-function IconDatabase({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <ellipse cx="12" cy="5" rx="8" ry="3" />
-      <path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
-      <path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
-    </svg>
-  );
-}
-function IconHexagon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M12 2.5l8.5 4.9v9.2L12 21.5l-8.5-4.9V7.4L12 2.5Z" />
-      <path d="M12 7.5l4 2.3v4.4l-4 2.3-4-2.3V9.8l4-2.3Z" />
-    </svg>
-  );
-}
-function IconBroadcast({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <circle cx="12" cy="12" r="2" />
-      <path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14" />
-    </svg>
-  );
-}
-
-/* --- Donnees ------------------------------------------------------------ */
-
-type Cost = "ia" | "mecanique";
+type Cost = "ia" | "auto";
 
 const STEPS: {
   n: number;
   title: string;
   cost: Cost;
-  costLabel: string;
   body: string;
-  detail: string;
-  Icon: (p: IconProps) => ReactNode;
+  Icon: LucideIcon;
 }[] = [
   {
     n: 1,
-    title: "Lecture du CV",
-    cost: "mecanique",
-    costLabel: "Sans IA",
-    Icon: IconDoc,
-    body:
-      "Votre fichier (PDF, DOCX ou TXT) est lu en mémoire pour en extraire le texte brut. Étape purement mécanique, sans modèle de langage.",
-    detail:
-      "Le CV est une donnée personnelle : il n'est jamais écrit sur le disque. On ne travaille que sur les octets reçus.",
+    title: "On lit votre CV",
+    cost: "auto",
+    Icon: FileText,
+    body: "Vous déposez votre CV (PDF, Word ou texte) et on en extrait vos compétences et votre parcours. Rien n'est conservé.",
   },
   {
     n: 2,
-    title: "Déduction du profil",
+    title: "L'IA cerne votre profil",
     cost: "ia",
-    costLabel: "1 appel IA",
-    Icon: IconSparkles,
-    body:
-      "Un premier agent (Gemini) lit le texte du CV et en déduit un profil de recherche structuré : intitulés de poste, localisations, niveau et type de contrat.",
-    detail:
-      "La sortie est contrainte à un schéma JSON : pas de texte libre à re-parser. L'agent traduit les compétences en intitulés que les recruteurs emploient réellement, et ajoute au besoin une variante enrichie (alternance, stage).",
+    Icon: Sparkles,
+    body: "Un agent identifie les postes, les lieux et le niveau qui vous correspondent, même si votre CV emploie des termes peu courants.",
   },
   {
     n: 3,
-    title: "Recherche multi-requêtes",
-    cost: "mecanique",
-    costLabel: "Sans IA",
-    Icon: IconSearch,
-    body:
-      "Le profil est éclaté en requêtes (chaque intitulé croisé avec chaque localisation), envoyées en parallèle à l'API d'offres d'emploi Adzuna.",
-    detail:
-      "Le nombre de combinaisons est plafonné (10 par défaut). Les requêtes partent simultanément ; une requête en échec est isolée et ne casse pas les autres.",
+    title: "On ratisse les offres",
+    cost: "auto",
+    Icon: Search,
+    body: "Plusieurs recherches partent en parallèle sur de vraies annonces, pour couvrir tous les postes et toutes les villes qui vous vont.",
   },
   {
     n: 4,
-    title: "Sélection des meilleures",
-    cost: "mecanique",
-    costLabel: "Sans IA",
-    Icon: IconFunnel,
-    body:
-      "Les résultats des requêtes sont entrelacés en round-robin, dédoublonnés par URL, puis coupés aux meilleures offres avant l'étape coûteuse.",
-    detail:
-      "L'entrelacement garantit que chaque requête contribue équitablement, plutôt que la première ne sature la liste. On ne garde que le haut du panier (12 par défaut) pour borner le coût de l'étape suivante.",
+    title: "On garde le meilleur",
+    cost: "auto",
+    Icon: Filter,
+    body: "Les doublons sont écartés et seules les offres les plus prometteuses passent devant le comité.",
   },
   {
     n: 5,
-    title: "Le comité délibère",
+    title: "Trois experts notent chaque offre",
     cost: "ia",
-    costLabel: "3 appels IA",
-    Icon: IconUsers,
-    body:
-      "Trois agents aux points de vue distincts notent les offres retenues, chacun en un seul appel groupé. Leurs notes sont moyennées en une note globale, et les offres sont classées.",
-    detail:
-      "C'est ici que vit le vrai temps de calcul : les trois agents délibèrent réellement, en parallèle. Chaque membre est notifié dès qu'il termine, sans attendre les autres.",
+    Icon: Users,
+    body: "Le comité évalue les offres retenues selon trois regards, puis les classe des plus adaptées aux moins.",
   },
 ];
 
-const MEMBERS: { initials: string; name: string; lens: string }[] = [
+const MEMBERS: {
+  key: string;
+  name: string;
+  role: string;
+  lens: string;
+  Icon: LucideIcon;
+}[] = [
   {
-    initials: "RH",
+    key: "rh",
     name: "RH",
-    lens:
-      "Adéquation humaine : culture d'entreprise, ton et mots-clés de l'annonce en regard du profil, cohérence du parcours.",
+    role: "Le facteur humain",
+    lens: "Culture d'entreprise, ton de l'annonce et cohérence de votre parcours.",
+    Icon: Handshake,
   },
   {
-    initials: "TL",
+    key: "tech",
     name: "Tech lead",
-    lens:
-      "Crédibilité technique : les compétences et l'expérience du profil face aux exigences techniques de l'offre. Exigeant sur les écarts de stack ou de séniorité.",
+    role: "La crédibilité technique",
+    lens: "Vos compétences face aux exigences du poste, sans complaisance sur les écarts.",
+    Icon: Code2,
   },
   {
-    initials: "M",
+    key: "market",
     name: "Marché",
-    lens:
-      "Réalisme de l'offre : cohérence salaire / séniorité, attractivité, localisation. Une note haute = offre réaliste et intéressante.",
+    role: "Le réalisme",
+    lens: "Salaire, séniorité, attractivité : l'offre est-elle sérieuse et faite pour vous ?",
+    Icon: TrendingUp,
   },
 ];
 
 const PRINCIPLES: {
+  key: string;
   title: string;
   body: string;
-  Icon: (p: IconProps) => ReactNode;
+  Icon: LucideIcon;
 }[] = [
   {
-    title: "Un entonnoir qui maîtrise le coût",
-    Icon: IconCoins,
-    body:
-      "Le fan-out et le tri se font sans IA. Seuls la lecture du profil et le comité appellent le modèle, soit 4 appels par recherche, quel que soit le nombre d'offres trouvées.",
+    key: "rh",
+    title: "Votre CV reste privé",
+    body: "Il est lu en mémoire le temps de l'analyse, jamais enregistré sur nos serveurs.",
+    Icon: ShieldCheck,
   },
   {
-    title: "Sans état",
-    Icon: IconDatabase,
-    body:
-      "Le backend ne stocke aucune session. Le profil déduit vit côté navigateur : vous pouvez l'ajuster et relancer une recherche sans re-téléverser votre CV.",
+    key: "tech",
+    title: "De vraies offres, à jour",
+    body: "Les postes proviennent d'annonces d'emploi réelles, pas d'une base figée.",
+    Icon: Briefcase,
   },
   {
-    title: "Architecture hexagonale",
-    Icon: IconHexagon,
-    body:
-      "Le cœur du pipeline orchestre des ports abstraits, jamais des technologies. Adzuna et Gemini sont des adaptateurs interchangeables, branchés à la périphérie.",
+    key: "market",
+    title: "Une note toujours expliquée",
+    body: "Chaque offre affiche sa note et l'avis du comité : vous savez pourquoi elle vous est proposée.",
+    Icon: Star,
   },
   {
-    title: "Résilient et diffusé en direct",
-    Icon: IconBroadcast,
-    body:
-      "Une requête ou un membre du comité qui échoue n'interrompt pas la recherche. L'avancement est diffusé au fil de l'eau (flux NDJSON) et rendu dans la frise des agents.",
+    key: "rh",
+    title: "Vous gardez la main",
+    body: "Ajustez les postes ou les villes et relancez la recherche, sans re-téléverser votre CV.",
+    Icon: SlidersHorizontal,
   },
 ];
 
 /* --- Reveal au defilement ----------------------------------------------- */
 
-// Enveloppe un bloc et le revele quand il entre dans le viewport. Coupe net
-// (visible d'emblee) si l'utilisateur demande moins d'animation.
 function Reveal({
   children,
   className = "",
@@ -281,8 +194,6 @@ function Reveal({
 export default function HowItWorks() {
   return (
     <main className="flow hiw">
-      {/* Decor de fond : deux halos qui derivent lentement (coupes en
-          reduced-motion). Purement decoratif, donc masque aux lecteurs. */}
       <div className="hiw-aurora" aria-hidden>
         <span className="hiw-orb hiw-orb-1" />
         <span className="hiw-orb hiw-orb-2" />
@@ -293,50 +204,40 @@ export default function HowItWorks() {
       </Link>
 
       <Reveal tag="header" className="flow-header hiw-hero">
-        <span className="hiw-eyebrow">Pipeline agentique</span>
         <h1 className="brand hiw-title">Comment ça marche</h1>
         <p className="tagline">
-          De votre CV aux offres notées, voici le trajet exact que suit Applairo,
-          étape par étape.
+          Confiez votre CV à une équipe d&apos;agents IA. Ils cherchent, trient et
+          notent les offres à votre place, pour ne garder que celles faites pour
+          vous.
         </p>
       </Reveal>
 
-      {/* Le principe cle : le cout LLM est borne par construction. */}
+      {/* La promesse : ce n'est pas un algorithme opaque, c'est un comite. */}
       <Reveal tag="section" className="hiw-keystone card">
-        <p className="hiw-keystone-eyebrow">Le principe</p>
-        <div className="hiw-formula">
-          <span className="hiw-chip hiw-chip-ia">
-            <strong>1</strong>
-            <span>profil</span>
-          </span>
-          <span className="hiw-op">+</span>
-          <span className="hiw-chip hiw-chip-ia">
-            <strong>3</strong>
-            <span>comité</span>
-          </span>
-          <span className="hiw-op">=</span>
-          <span className="hiw-chip hiw-chip-total">
-            <strong>4</strong>
-            <span>appels IA</span>
+        <div className="hiw-verdict">
+          <span className="hiw-vchip hiw-vchip-rh">RH</span>
+          <span className="hiw-vchip hiw-vchip-tech">Tech lead</span>
+          <span className="hiw-vchip hiw-vchip-market">Marché</span>
+          <span className="hiw-varrow" aria-hidden />
+          <span className="hiw-vscore">
+            92<small>/100</small>
           </span>
         </div>
         <p className="hiw-keystone-headline">
-          Une recherche complète ne coûte que{" "}
-          <strong>4 appels au modèle</strong>, quel que soit le nombre
-          d&apos;offres.
+          Chaque offre est notée par <strong>trois experts IA</strong>, pas par un
+          algorithme opaque.
         </p>
         <p className="hiw-keystone-body">
-          Tout ce qui peut se faire sans intelligence artificielle (lire le CV,
-          interroger les offres, trier) se fait sans elle. Chaque membre du comité
-          note <strong>toutes</strong> les offres en un seul appel groupé : la
-          facture ne gonfle pas avec le volume.
+          Vous ne recevez pas une liste filtrée à l&apos;aveugle. Trois agents aux
+          regards complémentaires jugent chaque poste, le classent, et vous disent
+          pourquoi il vous correspond.
         </p>
       </Reveal>
 
-      {/* Le pipeline : rail vertical, une etape par phase reelle du backend. */}
+      {/* Le parcours, etape par etape. */}
       <section className="hiw-section">
         <Reveal tag="header" className="hiw-section-head">
-          <h2 className="hiw-h2">Le pipeline, étape par étape</h2>
+          <h2 className="hiw-h2">Le parcours, étape par étape</h2>
         </Reveal>
         <ol className="hiw-steps">
           {STEPS.map((s, i) => (
@@ -355,54 +256,59 @@ export default function HowItWorks() {
               <div className="hiw-step-body">
                 <div className="hiw-step-head">
                   <h3 className="hiw-step-title">{s.title}</h3>
-                  <span className={`hiw-badge hiw-badge-${s.cost}`}>
-                    {s.cost === "ia" && (
-                      <IconSparkles className="hiw-badge-icon" />
-                    )}
-                    {s.costLabel}
-                  </span>
+                  {s.cost === "ia" && (
+                    <span className="hiw-badge hiw-badge-ia">
+                      <Sparkles className="hiw-badge-icon" />
+                      IA
+                    </span>
+                  )}
                 </div>
                 <p className="hiw-step-text">{s.body}</p>
-                <p className="hiw-step-detail">{s.detail}</p>
               </div>
             </Reveal>
           ))}
         </ol>
       </section>
 
-      {/* Le comite : trois points de vue, detailles. */}
+      {/* Le comite : trois cartes-personnages, chacune sa couleur. */}
       <section className="hiw-section">
         <Reveal tag="header" className="hiw-section-head">
-          <h2 className="hiw-h2">Le comité, trois regards</h2>
+          <h2 className="hiw-h2">Rencontrez le comité</h2>
           <p className="hiw-section-lead">
-            Le classement final n&apos;est pas l&apos;avis d&apos;un seul agent,
-            mais la synthèse de trois points de vue complémentaires. Ils
-            travaillent en parallèle ; leurs notes sont ensuite moyennées.
+            Trois agents, trois regards complémentaires. Ils notent chaque offre en
+            parallèle, puis on fait la moyenne pour votre classement.
           </p>
         </Reveal>
         <div className="hiw-members">
           {MEMBERS.map((m, i) => (
-            <Reveal key={m.name} delay={i * 90} className="hiw-member card">
-              <span className="agent-avatar hiw-member-avatar">
-                {m.initials}
+            <Reveal
+              key={m.name}
+              delay={i * 90}
+              className={`hiw-member hiw-member-${m.key} card`}
+            >
+              <span className="hiw-member-avatar">
+                <m.Icon />
               </span>
-              <div>
-                <p className="agent-name">{m.name}</p>
-                <p className="hiw-member-lens">{m.lens}</p>
-              </div>
+              <p className="hiw-member-name">{m.name}</p>
+              <p className="hiw-member-role">{m.role}</p>
+              <p className="hiw-member-lens">{m.lens}</p>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* Les partis pris d'architecture. */}
+      {/* Ce qui compte pour vous : reassurances utilisateur. */}
       <section className="hiw-section">
         <Reveal tag="header" className="hiw-section-head">
-          <h2 className="hiw-h2">Les partis pris</h2>
+          <h2 className="hiw-h2">Pourquoi lui faire confiance</h2>
         </Reveal>
         <div className="hiw-principles">
           {PRINCIPLES.map((p, i) => (
-            <Reveal key={p.title} delay={i * 80} className="hiw-principle card">
+            <Reveal
+              key={p.title}
+              delay={i * 80}
+              className={`hiw-principle hiw-principle-${p.key} card`}
+            >
               <span className="hiw-principle-icon">
                 <p.Icon />
               </span>
