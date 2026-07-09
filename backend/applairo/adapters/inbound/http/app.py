@@ -19,6 +19,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging(settings.log_level)
     workflow = build_workflow(settings)
 
-    app = FastAPI(title="Applairo API", version="0.2.0")
+    app = FastAPI(title="ApplaiNow API", version="0.2.0")
     app.include_router(build_router(workflow, settings.max_upload_bytes))
     return app
