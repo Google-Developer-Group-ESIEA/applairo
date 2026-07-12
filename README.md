@@ -1,6 +1,6 @@
-# Applairo
+# ApplaiNow
 
-**Applairo** - l'agent IA qui transforme votre profil/CV en offres d'emploi ciblées,
+**ApplaiNow** - l'agent IA qui transforme votre profil/CV en offres d'emploi ciblées,
 puis *(bientôt)* postule pour vous.
 Construit avec **Google ADK**, **Gemini 2.5 Flash** et l'**API Adzuna**.
 

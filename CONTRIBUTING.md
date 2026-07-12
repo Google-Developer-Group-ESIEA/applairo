@@ -1,6 +1,6 @@
-# Contribuer à Applairo
+# Contribuer à ApplaiNow
 
-Merci de votre intérêt pour **Applairo**.
+Merci de votre intérêt pour **ApplaiNow**.
 Ce projet est né d'une démo Google Developer Group x ESIEA pour montrer ce
 qu'on peut construire avec l'IA aujourd'hui. Les contributions (code, docs,
 idées, corrections de bugs) sont les bienvenues, débutants inclus.

@@ -8,9 +8,9 @@
 import HowItWorks from "./HowItWorks";
 
 export const metadata = {
-  title: "Comment ça marche - Applairo",
+  title: "Comment ça marche - ApplaiNow",
   description:
-    "Le pipeline agentique d'Applairo, étape par étape : de votre CV aux offres notées par un comité d'agents.",
+    "Le pipeline agentique d'ApplaiNow, étape par étape : de votre CV aux offres notées par un comité d'agents.",
 };
 
 export default function Page() {

@@ -136,7 +136,7 @@ export default function SearchFlow() {
         Comment ça marche ?
       </a>
       <header className="flow-header">
-        <h1 className="brand">Applairo</h1>
+        <h1 className="brand">ApplaiNow</h1>
         <p className="tagline">
           Votre CV, analysé et confronté à de vraies offres par un comité d&apos;agents.
         </p>

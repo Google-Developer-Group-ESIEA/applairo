@@ -1,6 +1,6 @@
 ---
 name: Proposition de fonctionnalité
-about: Suggérer une idée pour Applairo
+about: Suggérer une idée pour ApplaiNow
 title: "[Feature] "
 labels: enhancement
 assignees: ""
